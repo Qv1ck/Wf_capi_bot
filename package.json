@@ -1,15 +1,25 @@
 {
-  "name": "warframe-bot",
-  "version": "1.0.0",
-  "description": "Warframe Telegram Bot",
+  "name": "warframe-telegram-bot",
+  "version": "2.0.0",
+  "description": "Telegram бот для Warframe с актуальными данными из API",
   "main": "js_bot.js",
   "scripts": {
-    "start": "node js_bot.js"
+    "start": "node js_bot.js",
+    "test": "node warframe_api.js"
   },
+  "keywords": [
+    "warframe",
+    "telegram",
+    "bot",
+    "gaming"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
-    "telegraf": "^4.15.0",
-    "dotenv": "^16.3.1",
-    "node-schedule": "^2.1.1",
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "telegraf": "^4.15.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
