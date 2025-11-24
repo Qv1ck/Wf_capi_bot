@@ -43,14 +43,7 @@ let state = loadState();
 const subscribers = new Set(state.subscribers || []); // ID чатов, подписанных на уведомления
 const checkedEvents = new Set(state.checkedEvents || []); // События, о которых уже отправили уведомление
 let checkIntervals = []; // Массив для хранения ID таймеров (чтобы потом их остановить)
-const {
-    getFormattedSortie,
-    getFormattedBaro,
-    getFormattedCycles,
-    getFormattedFissures,
-    getFormattedInvasions,
-    getFormattedNightwave
-} = require('./warframe_api');
+const { getFormattedSortie, getFormattedCycles } = require('./warframe_worldstate_parser_v2');
 
 // ========================================================================
 // 3. ФУНКЦИИ ДЛЯ РАБОТЫ С ФАЙЛАМИ - Сохранение и загрузка состояния
@@ -113,15 +106,14 @@ bot.start((ctx) => {
         `Still sane, exile ? \n\n` +
         `*Доступные команды:*\n` +
         `/start - Просмотр команд\n` +
-        `/status - Фэзы\n` +
+        `/status - Фэзы (локальные расчёты)\n` +
         `/search (название) - Поиск\n` +
         `/subscribe - Подписаться\n` +
         `/unsubscribe - Отписаться\n\n` +
         
-        `*🔥 Новые команды с актуальными данными:*\n` +  // ⬅️ Добавьте эту секцию
-        `/baro - Информация о Baro Ki'Teer\n` +
+        `*🔥 Актуальные данные:*\n` +
         `/sortie - Текущая сортировка\n` +
-        `/fissures - Активные разломы\n\n`;
+        `/cycles - Циклы день/ночь\n\n`;
     
     ctx.replyWithMarkdown(message);
 });
@@ -170,17 +162,6 @@ bot.command('subscribe', (ctx) => {
         ctx.reply('ℹ️ Вы уже подписаны на уведомления.');
     }
 });
-bot.command('baro', async (ctx) => {
-    try {
-        const loading = await ctx.reply('⏳ Проверяю Baro...');
-        const info = await getFormattedBaro();
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
-    } catch (error) {
-        await ctx.reply('❌ Ошибка получения данных');
-    }
-});
-
 
 /**
  * /unsubscribe - Отписка от уведомлений
@@ -243,6 +224,34 @@ bot.command('status', (ctx) => {
     }
     
     ctx.replyWithMarkdown(message);
+});
+
+// ===== НОВЫЕ КОМАНДЫ С АКТУАЛЬНЫМИ ДАННЫМИ =====
+
+// Команда: /sortie - Текущая сортировка
+bot.command('sortie', async (ctx) => {
+    try {
+        const loading = await ctx.reply('⏳ Получаю данные о сортировке...');
+        const info = await getFormattedSortie();
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка в /sortie:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// Команда: /cycles - Циклы день/ночь
+bot.command('cycles', async (ctx) => {
+    try {
+        const loading = await ctx.reply('⏳ Получаю данные о циклах...');
+        const info = await getFormattedCycles();
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка в /cycles:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
 });
 
 /**
