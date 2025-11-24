@@ -1,21 +1,15 @@
 {
   "name": "warframe-bot",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Warframe Telegram Bot",
+  "main": "js_bot.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node js_bot.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "asyncio": "^0.0.2",
-    "axios": "^1.13.2",
-    "cheerio": "^1.1.2",
-    "dotenv": "^17.2.3",
-    "node-fetch": "^3.3.2",
-    "telegraf": "^4.16.3"
+    "telegraf": "^4.15.0",
+    "dotenv": "^16.3.1",
+    "node-schedule": "^2.1.1",
+    "axios": "^1.6.0"
   }
 }

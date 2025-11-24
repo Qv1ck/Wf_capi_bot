@@ -12,7 +12,7 @@
 //   ✅ /status
 //   ❌ Excalibur (просто текст - игнорируется)
 
-require('dotenv').config(); // Загружает переменные окружения (токен бота) из файла .env
+// require('dotenv').config(); // Загружает переменные окружения (токен бота) из файла .env
 const { Telegraf } = require('telegraf'); // Библиотека для работы с Telegram Bot API
 const fs = require('fs'); // Модуль Node.js для работы с файловой системой
 
