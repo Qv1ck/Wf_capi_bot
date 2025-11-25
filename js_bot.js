@@ -67,7 +67,6 @@ let state = loadState();
 const subscribers = new Set(state.subscribers || []); // ID чатов, подписанных на уведомления
 const checkedEvents = new Set(state.checkedEvents || []); // События, о которых уже отправили уведомление
 let checkIntervals = []; // Массив для хранения ID таймеров (чтобы потом их остановить)
-const { getFormattedSortie, getFormattedCycles } = require('./warframe_worldstate_parser_v2');
 const { 
     getFormattedSortie, 
     getFormattedBaro, 
