@@ -188,12 +188,12 @@ function formatWeaponInfo(weapon, type) {
         if (isCurrentWeek) {
             message += `✅ *Статус:* Доступен сейчас! (${currentWeek}-я из 6-ти)\n`;
         } else {
-            message += `⏰ *Статус:* Будет доступен на ${weaponWeek}-й неделе (сейчас ${currentWeek}-я из 6-ти)\n`;
+            message += `⏰ *Статус:* Будет доступен на ${weaponWeek} неделе (сейчас ${currentWeek} из 6)\n`;
         }
         
         // Показываем оружие ТЕКУЩЕЙ недели
         const currentWeekWeapons = getWeekWeapons(currentWeek);
-        message += `\n*Оружие текущей (${currentWeek}-й) недели:*\n`;
+        message += `\n*Оружие текущей недели:*\n`;
         message += currentWeekWeapons.join(', ');
     } else {
         message += `❌ *Инкарнон:* Недоступен`;
@@ -209,24 +209,40 @@ function formatWeaponInfo(weapon, type) {
 async function searchLocalDB(query) {
     const normalizedQuery = query.toLowerCase().trim();
     
+    console.log(`🔍 Ищу варфрейма: '${normalizedQuery}'`);
+    
+    // Проверяем алиасы
     const englishName = nameAliasesDB[normalizedQuery];
     const searchName = englishName || normalizedQuery;
     
+    console.log(`📝 Поисковое имя: '${searchName}'`);
+    
     for (const [name, abilities] of Object.entries(abilitiesDB)) {
+        const frameName = abilities.name || name;
+        
+        console.log(`  Проверяю: ${frameName} (ключ: ${name})`);
+        
         if (name.toLowerCase().includes(searchName) || 
-            abilities.name?.toLowerCase().includes(searchName)) {
+            frameName.toLowerCase().includes(searchName)) {
+            
+            console.log(`✅ НАЙДЕНО: ${frameName}`);
             
             // Поиск варфрейма в Дувири
             let duviriInfo = null;
-            for (const [key, warframe] of Object.entries(warframesDuviri)) {
-                if (warframe.name.toLowerCase() === abilities.name.toLowerCase()) {
-                    duviriInfo = warframe;
-                    break;
+            try {
+                for (const [key, warframe] of Object.entries(warframesDuviri)) {
+                    if (warframe.name.toLowerCase() === frameName.toLowerCase()) {
+                        duviriInfo = warframe;
+                        console.log(`✅ Найден в Дувири: неделя ${warframe.week}`);
+                        break;
+                    }
                 }
+            } catch (error) {
+                console.error('❌ Ошибка поиска в Дувири:', error.message);
             }
             
             return {
-                title: abilities.name || name,
+                title: frameName,
                 abilities: abilities.abilities,
                 dropLocations: dropLocationsDB[name],
                 duviri: duviriInfo
@@ -234,6 +250,7 @@ async function searchLocalDB(query) {
         }
     }
     
+    console.log(`❌ Не найдено: '${normalizedQuery}'`);
     return null;
 }
 
@@ -261,7 +278,7 @@ function formatWarframeInfo(info) {
         const isCurrentWeek = info.duviri.week === currentWeek;
         
         message += `\n🌀 *Цепь Дувири:* Доступен\n`;
-        message += `📅 *Неделя:* ${info.duviri.week} (сейчас ${currentWeek}-я из 11-ти)\n`;
+        message += `📅 *Неделя:* ${info.duviri.week} (сейчас ${currentWeek} из 11)\n`;
         message += `🧬 *Helminth:* ${info.duviri.helminth}`;
         
         if (isCurrentWeek) {
