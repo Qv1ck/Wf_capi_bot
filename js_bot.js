@@ -51,11 +51,28 @@ if (!process.env.BOT_TOKEN) {
 // ========================================================================
 // 2. ИНИЦИАЛИЗАЦИЯ БОТА И СОСТОЯНИЯ
 // ========================================================================
+// 1. Сначала объявляем функцию loadState()
+function loadState() {
+    try {
+        if (fs.existsSync(STATE_FILE)) {
+            const data = fs.readFileSync(STATE_FILE, 'utf8');
+            return JSON.parse(data);
+        }
+    } catch (error) {
+        console.error('❌ Ошибка загрузки состояния:', error.message);
+    }
+    return { subscribers: [], checkedEvents: [] };
+}
+
+// 2. Затем загружаем состояние
 let state = loadState();
+
+// 3. Затем инициализируем переменные
 const subscribers = new Set(state.subscribers || []);
 const checkedEvents = new Set(state.checkedEvents || []);
 let checkIntervals = [];
 
+// 4. И только потом объявляем saveState(), которая использует эти переменные
 function saveState() {
     try {
         const currentState = {
@@ -69,6 +86,7 @@ function saveState() {
         console.error('❌ Ошибка сохранения:', error.message);
     }
 }
+
 
 // ========================================================================
 // ФУНКЦИЯ РАСЧЁТА НЕДЕЛИ ДУВИРИ
