@@ -12,6 +12,30 @@
 //   ✅ /status
 //   ❌ Excalibur (просто текст - игнорируется)
 
+// ========================================================================
+// ПРИМЕЧАНИЯ
+// ========================================================================
+
+/**
+ * ДОСТУПНЫЕ КОМАНДЫ:
+ * 
+ * /start                  - Главное меню с кнопками
+ * /sortie или /вылазка    - Текущая вылазка
+ * /baro или /баро         - Baro Ki'Teer
+ * /invasions или /вторжения - Вторжения
+ * /time или /цикл         - Все циклы
+ * /time Цетус             - Только Равнины Эйдолона
+ * /time Фортуна           - Только Orb Vallis
+ * /time Деймос            - Только Камбионский Дрейф
+ * /time Земля             - Только Земля
+ * 
+ * КНОПКИ В /start:
+ * - Вызывают те же функции что и команды
+ * - Работают через callback_query
+ * - Более удобны для пользователей
+ */
+
+
 // require('dotenv').config(); // Загружает переменные окружения (токен бота) из файла .env
 const { Telegraf } = require('telegraf'); // Библиотека для работы с Telegram Bot API
 const fs = require('fs'); // Модуль Node.js для работы с файловой системой
@@ -44,6 +68,13 @@ const subscribers = new Set(state.subscribers || []); // ID чатов, подп
 const checkedEvents = new Set(state.checkedEvents || []); // События, о которых уже отправили уведомление
 let checkIntervals = []; // Массив для хранения ID таймеров (чтобы потом их остановить)
 const { getFormattedSortie, getFormattedCycles } = require('./warframe_worldstate_parser_v2');
+const { 
+    getFormattedSortie, 
+    getFormattedBaro, 
+    getFormattedInvasions, 
+    getFormattedCycles 
+} = require('./warframe_parser_v3');
+const { Markup } = require('telegraf');
 
 // ========================================================================
 // 3. ФУНКЦИИ ДЛЯ РАБОТЫ С ФАЙЛАМИ - Сохранение и загрузка состояния
@@ -94,7 +125,7 @@ function loadState() {
 // ========================================================================
 
 /**
- * /start - Приветственное сообщение и список команд
+ * /start с кнопками - Приветственное сообщение и список команд
  * ctx (context) - объект, содержащий всю информацию о сообщении:
  * - ctx.from.first_name - имя отправителя
  * - ctx.chat.id - уникальный ID чата
@@ -103,19 +134,237 @@ function loadState() {
 bot.start((ctx) => {
     const message = 
         `🤖 *Warf_bot*\n\n` +
-        `Still sane, exile ? \n\n` +
-        `*Доступные команды:*\n` +
-        `/start - Просмотр команд\n` +
-        `/status - Фэзы (локальные расчёты)\n` +
-        `/search (название) - Поиск\n` +
-        `/subscribe - Подписаться\n` +
-        `/unsubscribe - Отписаться\n\n` +
-        
-        `*🔥 Актуальные данные:*\n` +
-        `/sortie - Текущая сортировка\n` +
-        `/cycles - Циклы день/ночь\n\n`;
+        `Still sane, exile?\n\n` +
+        `Выберите команду ниже или введите вручную:`;
     
-    ctx.replyWithMarkdown(message);
+    // Создаём кнопки
+    const keyboard = Markup.inlineKeyboard([
+        [
+            Markup.button.callback('📋 Вылазка', 'cmd_sortie'),
+            Markup.button.callback('💎 Baro', 'cmd_baro')
+        ],
+        [
+            Markup.button.callback('⚔️ Вторжения', 'cmd_invasions'),
+            Markup.button.callback('🌍 Циклы', 'cmd_cycles')
+        ],
+        [
+            Markup.button.callback('🔍 Поиск варфрейма', 'cmd_search'),
+            Markup.button.callback('📊 Статус', 'cmd_status')
+        ],
+        [
+            Markup.button.callback('🔔 Подписки', 'cmd_subscribe')
+        ]
+    ]);
+    
+    ctx.replyWithMarkdown(message, keyboard);
+});
+
+// ========================================================================
+// ОБРАБОТЧИКИ КНОПОК
+// ========================================================================
+
+// Вылазка
+bot.action('cmd_sortie', async (ctx) => {
+    await ctx.answerCbQuery(); // Убирает "часики" на кнопке
+    await ctx.reply('⏳ Получаю данные о вылазке...');
+    
+    try {
+        const info = await getFormattedSortie();
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// Baro Ki'Teer
+bot.action('cmd_baro', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('⏳ Проверяю Baro Ki\'Teer...');
+    
+    try {
+        const info = await getFormattedBaro();
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// Вторжения
+bot.action('cmd_invasions', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('⏳ Получаю список вторжений...');
+    
+    try {
+        const info = await getFormattedInvasions();
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// Циклы
+bot.action('cmd_cycles', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('⏳ Получаю данные о циклах...');
+    
+    try {
+        const info = await getFormattedCycles();
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// Поиск - показываем подсказку
+bot.action('cmd_search', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔍 Используйте команду:\n/search <название варфрейма>\n\nНапример: /search Excalibur');
+});
+
+// Статус - вызываем вашу существующую команду
+bot.action('cmd_status', async (ctx) => {
+    await ctx.answerCbQuery();
+    // Здесь вызовите вашу существующую функцию статуса
+    // Например:
+    ctx.reply('📊 Статус:\n\n' + getCurrentStatus());
+});
+
+// Подписки - показываем меню
+bot.action('cmd_subscribe', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('✅ Подписаться', 'sub_yes')],
+        [Markup.button.callback('❌ Отписаться', 'sub_no')]
+    ]);
+    
+    ctx.reply('🔔 Управление подписками:', keyboard);
+});
+
+bot.action('sub_yes', async (ctx) => {
+    await ctx.answerCbQuery('✅ Подписка оформлена!');
+    const chatId = ctx.chat.id;
+    if (!subscribers.has(chatId)) {
+        subscribers.add(chatId);
+        saveState();
+    }
+    ctx.reply('✅ Вы подписаны на уведомления');
+});
+
+bot.action('sub_no', async (ctx) => {
+    await ctx.answerCbQuery('❌ Отписка выполнена');
+    const chatId = ctx.chat.id;
+    if (subscribers.has(chatId)) {
+        subscribers.delete(chatId);
+        saveState();
+    }
+    ctx.reply('❌ Вы отписаны от уведомлений');
+});
+
+bot.command(['sortie', 'вылазка', 'Вылазка'], async (ctx) => {
+    try {
+        const loading = await ctx.reply('⏳ Получаю данные о вылазке...');
+        const info = await getFormattedSortie();
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// Baro Ki'Teer - оба варианта написания
+bot.command(['baro', 'Baro', 'баро', 'Баро'], async (ctx) => {
+    try {
+        const loading = await ctx.reply('⏳ Проверяю Baro Ki\'Teer...');
+        const info = await getFormattedBaro();
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// Вторжения
+bot.command(['invasions', 'вторжения', 'Вторжения'], async (ctx) => {
+    try {
+        const loading = await ctx.reply('⏳ Получаю список вторжений...');
+        const info = await getFormattedInvasions();
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// Циклы/Время - с параметрами
+bot.command(['time', 'цикл', 'циклы', 'время'], async (ctx) => {
+    try {
+        // Получаем текст после команды
+        let location = ctx.message.text.split(' ').slice(1).join(' ').trim();
+        
+        const loading = await ctx.reply('⏳ Получаю данные о циклах...');
+        const info = await getFormattedCycles(location || null);
+        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
+        await ctx.replyWithMarkdown(info);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        await ctx.reply('❌ Не удалось получить данные');
+    }
+});
+
+// ========================================================================
+// ДОПОЛНИТЕЛЬНО: МЕНЮ ЦИКЛОВ С КНОПКАМИ
+// ========================================================================
+
+// Команда /time без параметров показывает меню
+bot.command(['time_menu', 'цикл_меню'], async (ctx) => {
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('🌾 Равнины Эйдолона', 'cycle_cetus')],
+        [Markup.button.callback('❄️ Orb Vallis (Фортуна)', 'cycle_vallis')],
+        [Markup.button.callback('🦠 Камбионский Дрейф', 'cycle_cambion')],
+        [Markup.button.callback('🌍 Земля', 'cycle_earth')],
+        [Markup.button.callback('🌐 Все циклы', 'cycle_all')]
+    ]);
+    
+    ctx.reply('🌍 Выберите локацию:', keyboard);
+});
+
+// Обработчики для отдельных локаций
+bot.action('cycle_cetus', async (ctx) => {
+    await ctx.answerCbQuery();
+    const info = await getFormattedCycles('Цетус');
+    ctx.replyWithMarkdown(info);
+});
+
+bot.action('cycle_vallis', async (ctx) => {
+    await ctx.answerCbQuery();
+    const info = await getFormattedCycles('Фортуна');
+    ctx.replyWithMarkdown(info);
+});
+
+bot.action('cycle_cambion', async (ctx) => {
+    await ctx.answerCbQuery();
+    const info = await getFormattedCycles('Деймос');
+    ctx.replyWithMarkdown(info);
+});
+
+bot.action('cycle_earth', async (ctx) => {
+    await ctx.answerCbQuery();
+    const info = await getFormattedCycles('Земля');
+    ctx.replyWithMarkdown(info);
+});
+
+bot.action('cycle_all', async (ctx) => {
+    await ctx.answerCbQuery();
+    const info = await getFormattedCycles();
+    ctx.replyWithMarkdown(info);
 });
 
 /**
