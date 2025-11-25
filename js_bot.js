@@ -1,5 +1,5 @@
 // ========================================================================
-// WARFRAME BOT V3 FINAL - ПОЛНАЯ ВЕРСИЯ (FIXED SEARCH)
+// WARFRAME BOT V3 FINAL - COMPLETE VERSION
 // ========================================================================
 
 const { Telegraf, Markup } = require('telegraf');
@@ -204,6 +204,128 @@ function formatWeaponInfo(weapon, type) {
 }
 
 // ========================================================================
+// БАЗА ДАННЫХ HELMINTH И АУГМЕНТОВ
+// ========================================================================
+
+const helminthAbilities = {
+    "Ash": { ability: "Ищущий Сюрикен", slot: 1 },
+    "Atlas": { ability: "Груда Булыжников", slot: 1 },
+    "Banshee": { ability: "Тишина", slot: 3 },
+    "Baruuk": { ability: "Реактивный Шторм", slot: 4 },
+    "Chroma": { ability: "Вечный Страж", slot: 2 },
+    "Citrine": { ability: "Кристальный Резонанс", slot: 3 },
+    "Ember": { ability: "Экзотермика", slot: 1 },
+    "Equinox": { ability: "Отдых и Ярость", slot: 3 },
+    "Excalibur": { ability: "Яростное Копьё", slot: 1 },
+    "Frost": { ability: "Охлаждающая Сфера", slot: 1 },
+    "Gara": { ability: "Спектроисточник", slot: 2 },
+    "Garuda": { ability: "Измельчающие Когти", slot: 1 },
+    "Gauss": { ability: "Термическое Клеймо", slot: 3 },
+    "Grendel": { ability: "Сытость", slot: 3 },
+    "Gyre": { ability: "Удар Вольт", slot: 1 },
+    "Harrow": { ability: "Нерушимый Завет", slot: 1 },
+    "Hildryn": { ability: "Пылающий Грабёж", slot: 2 },
+    "Hydroid": { ability: "Вирусный Шторм", slot: 4 },
+    "Inaros": { ability: "Инверсионная Броня", slot: 2 },
+    "Ivara": { ability: "Проникновение", slot: 3 },
+    "Khora": { ability: "Усиливающийся Когтехлыст", slot: 1 },
+    "Kullervo": { ability: "Коллективное Проклятие", slot: 2 },
+    "Lavos": { ability: "Вуаль Поганки", slot: 1 },
+    "Limbo": { ability: "Укрытие Бездны", slot: 1 },
+    "Loki": { ability: "Тихая Невидимость", slot: 2 },
+    "Mag": { ability: "Разрывающее Сокрушение", slot: 2 },
+    "Mesa": { ability: "Вальс Мисы", slot: 3 },
+    "Mirage": { ability: "Полное Затмение", slot: 3 },
+    "Nekros": { ability: "Щит Теней", slot: 4 },
+    "Nezha": { ability: "Пылающий Нимб", slot: 1 },
+    "Nidus": { ability: "Ненасытность", slot: 1 },
+    "Nova": { ability: "Молекулярное Деление", slot: 4 },
+    "Nyx": { ability: "Ассимиляция", slot: 4 },
+    "Oberon": { ability: "Возрождение Феникса", slot: 4 },
+    "Octavia": { ability: "Дирижёр", slot: 1 },
+    "Protea": { ability: "Раздача Гранат", slot: 3 },
+    "Qorvex": { ability: "Каменная Стена", slot: 2 },
+    "Revenant": { ability: "Пакт Раба", slot: 1 },
+    "Rhino": { ability: "Нерушимый Рывок", slot: 2 },
+    "Saryn": { ability: "Доза Яда", slot: 1 },
+    "Sevagoth": { ability: "Скользящее Мучение", slot: 1 },
+    "Styanax": { ability: "Метательное Копьё", slot: 1 },
+    "Titania": { ability: "Блиц Бритвокрыла", slot: 1 },
+    "Trinity": { ability: "Вампирская Пиявка", slot: 2 },
+    "Valkyr": { ability: "Вечная Война", slot: 2 },
+    "Vauban": { ability: "Отталкивающая Бастилия", slot: 3 },
+    "Volt": { ability: "Шокирующая Скорость", slot: 2 },
+    "Wisp": { ability: "Разгоняющиеся Водохранилища", slot: 2 },
+    "Wukong": { ability: "Небесный Посох", slot: 1 },
+    "Xaku": { ability: "Осколок Отказа", slot: 4 },
+    "Yareli": { ability: "Морская Раковина", slot: 3 },
+    "Zephyr": { ability: "Воздушный Взрыв", slot: 1 }
+};
+
+const augmentMods = {
+    "Ash": [
+        "Ищущий Сюрикен (аугмент на способность 1)",
+        "Восходящий Шторм (аугмент на способность 2)",
+        "Восполняющий Клинок (аугмент на способность 4)"
+    ],
+    "Atlas": [
+        "Груда Булыжников (аугмент на способность 1)",
+        "Окаменение (аугмент на способность 3)",
+        "Текущая Лава (аугмент на способность 4)"
+    ],
+    "Banshee": [
+        "Заряженный Резонанс (аугмент на способность 1)",
+        "Тишина (аугмент на способность 3)",
+        "Звуковой Удар (аугмент на способность 4)"
+    ],
+    "Ember": [
+        "Экзотермика (аугмент на способность 1)",
+        "Огненный Взрыв (аугмент на способность 2)",
+        "Пламенный Взрыв (аугмент на способность 4)"
+    ],
+    "Excalibur": [
+        "Яростное Копьё (аугмент на способность 1)",
+        "Превосходящий Клинок (аугмент на способность 2)",
+        "Хроматический Клинок (аугмент на способность 4)"
+    ],
+    "Frost": [
+        "Охлаждающая Сфера (аугмент на способность 1)",
+        "Ледяная Лавина (аугмент на способность 3)",
+        "Ледяная Волна Импеданса (аугмент на способность 4)"
+    ],
+    "Mag": [
+        "Разрывающее Сокрушение (аугмент на способность 2)",
+        "Противодействие (аугмент на способность 3)",
+        "Магнетизировать Аномалию (аугмент на способность 4)"
+    ],
+    "Nova": [
+        "Молекулярное Деление (аугмент на способность 4)",
+        "Нейтронная Звезда (аугмент на способность 1)",
+        "Червоточина Потока (аугмент на способность 3)"
+    ],
+    "Rhino": [
+        "Нерушимый Рывок (аугмент на способность 2)",
+        "Железная Броня (аугмент на способность 3)",
+        "Мощный Удар Раскалывающий (аугмент на способность 4)"
+    ],
+    "Saryn": [
+        "Доза Яда (аугмент на способность 1)",
+        "Токсичный Прилив (аугмент на способность 3)",
+        "Возрождение Спор (аугмент на способность 4)"
+    ],
+    "Trinity": [
+        "Вампирская Пиявка (аугмент на способность 2)",
+        "Благословение Истребителей (аугмент на способность 4)",
+        "Энергетический Вампир (аугмент на способность 3)"
+    ],
+    "Volt": [
+        "Шокирующая Скорость (аугмент на способность 2)",
+        "Переделывающийся Щит (аугмент на способность 3)",
+        "Ёмкая Разгрузка (аугмент на способность 4)"
+    ]
+};
+
+// ========================================================================
 // ФУНКЦИЯ ПОИСКА ВАРФРЕЙМОВ (ИСПРАВЛЕНА!)
 // ========================================================================
 
@@ -303,11 +425,18 @@ async function searchLocalDB(query) {
         console.error('❌ Ошибка поиска в Дувири:', error.message);
     }
     
+    // Шаг 5: Helminth и аугменты
+    const helminthInfo = helminthAbilities[englishKey];
+    const augments = augmentMods[englishKey] || [];
+    
     return {
         title: displayName,
+        englishKey: englishKey,
         abilities: abilities,
         dropLocations: dropLocationsDB[englishKey],
-        duviri: duviriInfo
+        duviri: duviriInfo,
+        helminth: helminthInfo,
+        augments: augments
     };
 }
 
@@ -334,12 +463,36 @@ function formatWarframeInfo(info) {
         message += '\n';
     }
     
-    // Места фарма
-    if (info.dropLocations && info.dropLocations.length > 0) {
-        message += `📍 *Где фармить:*\n`;
-        info.dropLocations.forEach(loc => {
-            message += `• ${loc}\n`;
+    // Helminth
+    if (info.helminth) {
+        message += `🧬 *Helminth:*\n`;
+        message += `• ${info.helminth.ability} (слот ${info.helminth.slot})\n\n`;
+    }
+    
+    // Аугменты
+    if (info.augments && info.augments.length > 0) {
+        message += `📦 *Моды-аугменты:*\n`;
+        info.augments.forEach(aug => {
+            message += `• ${aug}\n`;
         });
+        message += '\n';
+    }
+    
+    // Места фарма
+    if (info.dropLocations) {
+        message += `🎯 *Где добыть:*\n`;
+        
+        const partEmojis = {
+            'Нейроптика': '🔸',
+            'Система': '📘',
+            'Каркас': '🔲',
+            'Основной Чертеж': '📜'
+        };
+        
+        for (const [part, location] of Object.entries(info.dropLocations)) {
+            const emoji = partEmojis[part] || '•';
+            message += `${emoji} ${part}: ${location}\n`;
+        }
         message += '\n';
     }
     
@@ -367,60 +520,28 @@ function getLocationStatus(locationName, now) {
     if (!location) return `❌ Локация "${locationName}" не найдена`;
     
     const currentTime = now.getTime();
+    const cycle = location.cycles[0];
+    const startTime = new Date(cycle.start).getTime();
+    const cycleDuration = cycle.duration * 60 * 1000;
     
-    // Для Равнин Эйдолона
-    if (locationName === 'Равнины Эйдолона') {
-        const cycleDuration = location.cycle_minutes * 60 * 1000; // 150 минут в мс
-        const dayDuration = location.day_duration * 60 * 1000;    // 100 минут в мс
-        
-        // Время с начала цикла (произвольная точка отсчёта)
-        const timeInCycle = (currentTime % cycleDuration);
-        const isDay = timeInCycle < dayDuration;
-        const timeUntilChange = isDay ? dayDuration - timeInCycle : cycleDuration - timeInCycle;
-        const minutesUntilChange = Math.floor(timeUntilChange / 60000);
-        
-        const currentPhase = isDay ? 'День' : 'Ночь';
-        const emoji = isDay ? '☀️' : '🌙';
-        
-        return `*${locationName}:* ${emoji} ${currentPhase}\n` +
-               `⏰ До смены: ${minutesUntilChange}м`;
-    }
+    const timeSinceStart = currentTime - startTime;
+    const timeInCycle = timeSinceStart % cycleDuration;
+    const phase1Duration = cycle.phase1_duration * 60 * 1000;
     
-    // Для Фортуны
-    if (locationName === 'Фортуна') {
-        const cycleDuration = location.cycle_minutes * 60 * 1000; // 270 минут в мс
-        const warmDuration = location.warm_duration * 60 * 1000;  // 200 минут в мс
-        
-        const timeInCycle = (currentTime % cycleDuration);
-        const isWarm = timeInCycle < warmDuration;
-        const timeUntilChange = isWarm ? warmDuration - timeInCycle : cycleDuration - timeInCycle;
-        const minutesUntilChange = Math.floor(timeUntilChange / 60000);
-        
-        const currentPhase = isWarm ? 'Тепло' : 'Холод';
-        const emoji = isWarm ? '☀️' : '❄️';
-        
-        return `*${locationName}:* ${emoji} ${currentPhase}\n` +
-               `⏰ До смены: ${minutesUntilChange}м`;
-    }
+    const isPhase1 = timeInCycle < phase1Duration;
+    const currentPhase = isPhase1 ? cycle.phase1 : cycle.phase2;
+    const timeUntilChange = isPhase1 
+        ? phase1Duration - timeInCycle 
+        : cycleDuration - timeInCycle;
     
-    // Для Камбионского Дрейфа
-    if (locationName === 'Деймос') {
-        const cycleDuration = location.cycle_minutes * 60 * 1000;  // 180 минут в мс
-        const activeDuration = location.active_duration * 60 * 1000; // 120 минут в мс
-        
-        const timeInCycle = (currentTime % cycleDuration);
-        const isActive = timeInCycle < activeDuration;
-        const timeUntilChange = isActive ? activeDuration - timeInCycle : cycleDuration - timeInCycle;
-        const minutesUntilChange = Math.floor(timeUntilChange / 60000);
-        
-        const currentPhase = isActive ? 'Фэз' : 'Воум';
-        const emoji = isActive ? '🔥' : '💤';
-        
-        return `*${locationName}:* ${emoji} ${currentPhase}\n` +
-               `⏰ До смены: ${minutesUntilChange}м`;
-    }
+    const minutesUntilChange = Math.floor(timeUntilChange / 60000);
     
-    return `❌ Неизвестная локация: ${locationName}`;
+    const emoji = currentPhase.includes('День') || currentPhase.includes('Тепло') 
+        ? '☀️' 
+        : '🌙';
+    
+    return `*${locationName}:* ${emoji} ${currentPhase}\n` +
+           `⏰ До смены: ${minutesUntilChange}м`;
 }
 
 // ========================================================================
@@ -766,13 +887,29 @@ bot.action('cmd_warframes', async (ctx) => {
 
 bot.action('cmd_status', async (ctx) => {
     await ctx.answerCbQuery();
-    const now = new Date();
-    const message = `🕒 *Текущее время: ${now.toUTCString()}*\n\n` +
-                    `${getLocationStatus('Равнины Эйдолона', now)}\n\n` +
-                    `${getLocationStatus('Фортуна', now)}\n\n` +
-                    `${getLocationStatus('Деймос', now)}\n\n` +
-                    `📊 *Подписчиков:* ${subscribers.size}`;
-    ctx.replyWithMarkdown(message);
+    
+    try {
+        const now = new Date();
+        
+        // Получаем циклы Земли из парсера
+        let earthCycle = '';
+        try {
+            const cyclesInfo = await getFormattedCycles();
+            earthCycle = cyclesInfo; // Парсер уже возвращает форматированную строку
+        } catch (error) {
+            console.error('Ошибка получения циклов Земли:', error);
+            earthCycle = '❌ Не удалось получить данные о Земле';
+        }
+        
+        let message = `🕒 *Текущее время: ${now.toUTCString()}*\n\n`;
+        message += earthCycle + '\n\n';
+        message += `📊 *Подписчиков:* ${subscribers.size}`;
+        
+        ctx.replyWithMarkdown(message);
+    } catch (error) {
+        console.error('Ошибка cmd_status:', error);
+        await ctx.reply('❌ Произошла ошибка при получении статуса');
+    }
 });
 
 bot.action('cmd_subscribe', async (ctx) => {
@@ -884,30 +1021,39 @@ bot.command('search', async (ctx) => {
     }
 });
 
-bot.command('status', (ctx) => {
-    const location = ctx.message.text.replace('/status', '').trim().toLowerCase();
-    
-    let message = '';
-    const now = new Date();
-    
-    if (!location) {
-        message = `🕒 *Текущее время: ${now.toUTCString()}*\n\n` +
-                  `${getLocationStatus('Равнины Эйдолона', now)}\n\n` +
-                  `${getLocationStatus('Фортуна', now)}\n\n` +
-                  `${getLocationStatus('Камбионский Дрейф', now)}\n\n` +
-                  `⏰ *Уведомления приходят за:* 10 и 5 минут до смены цикла` +
-                  `\n\n📊 *Подписчиков:* ${subscribers.size}`;
-    } else if (location === 'равнины эйдолона' || location === 'cetus') {
-        message = getLocationStatus('Равнины Эйдолона', now);
-    } else if (location === 'фортуна' || location === 'fortuna') {
-        message = getLocationStatus('Фортуна', now);
-    } else if (location === 'камбионский дрейф' || location === 'deimos') {
-        message = getLocationStatus('Камбионский Дрейф', now);
-    } else {
-        message = '❌ Использование: /status [Равнины Эйдолона|фортуна|Камбионский Дрейф]';
+bot.command('status', async (ctx) => {
+    try {
+        const location = ctx.message.text.replace('/status', '').trim().toLowerCase();
+        
+        const now = new Date();
+        
+        // Получаем циклы Земли из парсера
+        let earthCycle = '';
+        try {
+            const cyclesInfo = await getFormattedCycles();
+            earthCycle = cyclesInfo;
+        } catch (error) {
+            console.error('Ошибка получения циклов Земли:', error);
+            earthCycle = '❌ Не удалось получить данные о Земле';
+        }
+        
+        let message = '';
+        
+        if (!location) {
+            message = `🕒 *Текущее время: ${now.toUTCString()}*\n\n`;
+            message += earthCycle + '\n\n';
+            message += `⏰ *Уведомления приходят за:* 10 и 5 минут до смены цикла\n\n`;
+            message += `📊 *Подписчиков:* ${subscribers.size}`;
+        } else {
+            // Здесь можно добавить обработку конкретных локаций
+            message = earthCycle;
+        }
+        
+        ctx.replyWithMarkdown(message);
+    } catch (error) {
+        console.error('Ошибка /status:', error);
+        await ctx.reply('❌ Произошла ошибка при получении статуса');
     }
-    
-    ctx.replyWithMarkdown(message);
 });
 
 // ========================================================================
@@ -978,49 +1124,27 @@ function checkSingleCycle(locationName, now) {
     if (!location) return;
 
     const currentTime = now.getTime();
+    const cycle = location.cycles[0];
+    const startTime = new Date(cycle.start).getTime();
+    const cycleDuration = cycle.duration * 60 * 1000;
     
-    let cycleDuration, phase1Duration, currentPhase, nextPhase;
+    const timeSinceStart = currentTime - startTime;
+    const timeInCycle = timeSinceStart % cycleDuration;
+    const phase1Duration = cycle.phase1_duration * 60 * 1000;
     
-    if (locationName === 'Равнины Эйдолона') {
-        cycleDuration = location.cycle_minutes * 60 * 1000;
-        phase1Duration = location.day_duration * 60 * 1000;
-        const timeInCycle = (currentTime % cycleDuration);
-        const isDay = timeInCycle < phase1Duration;
-        currentPhase = isDay ? 'День' : 'Ночь';
-        nextPhase = isDay ? 'Ночь' : 'День';
-    } 
-    else if (locationName === 'Фортуна') {
-        cycleDuration = location.cycle_minutes * 60 * 1000;
-        phase1Duration = location.warm_duration * 60 * 1000;
-        const timeInCycle = (currentTime % cycleDuration);
-        const isWarm = timeInCycle < phase1Duration;
-        currentPhase = isWarm ? 'Тепло' : 'Холод';
-        nextPhase = isWarm ? 'Холод' : 'Тепло';
-    }
-    else if (locationName === 'Деймос') {
-        cycleDuration = location.cycle_minutes * 60 * 1000;
-        phase1Duration = location.active_duration * 60 * 1000;
-        const timeInCycle = (currentTime % cycleDuration);
-        const isActive = timeInCycle < phase1Duration;
-        currentPhase = isActive ? 'Фэз' : 'Воум';
-        nextPhase = isActive ? 'Воум' : 'Фэз';
-    } else {
-        return;
-    }
-    
-    const timeInCycle = (currentTime % cycleDuration);
-    const timeUntilChange = timeInCycle < phase1Duration 
+    const isPhase1 = timeInCycle < phase1Duration;
+    const timeUntilChange = isPhase1 
         ? phase1Duration - timeInCycle 
         : cycleDuration - timeInCycle;
     
     const minutesUntilChange = Math.floor(timeUntilChange / 60000);
     
-    // Уведомления за 10 и 5 минут
     [10, 5].forEach(threshold => {
         const eventKey = `${locationName}_${threshold}_${Math.floor(currentTime / (60000 * threshold))}`;
         
         if (minutesUntilChange === threshold && !checkedEvents.has(eventKey)) {
             checkedEvents.add(eventKey);
+            const nextPhase = isPhase1 ? cycle.phase2 : cycle.phase1;
             const message = `⏰ *${locationName}*\n\n` +
                           `Через ${threshold} минут наступит: *${nextPhase}*`;
             sendToSubscribers(message);
@@ -1034,7 +1158,7 @@ function checkSingleCycle(locationName, now) {
 // ========================================================================
 
 console.log('='.repeat(60));
-console.log('🤖 WARFRAME BOT V3 FINAL (FIXED SEARCH)');
+console.log('🤖 WARFRAME BOT V3 COMPLETE');
 console.log('='.repeat(60));
 console.log('✓ Бот инициализирован');
 console.log('✓ Парсер worldState подключён');
