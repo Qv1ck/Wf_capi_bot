@@ -220,8 +220,6 @@ async function searchLocalDB(query) {
     for (const [name, abilities] of Object.entries(abilitiesDB)) {
         const frameName = abilities.name || name;
         
-        console.log(`  Проверяю: ${frameName} (ключ: ${name})`);
-        
         if (name.toLowerCase().includes(searchName) || 
             frameName.toLowerCase().includes(searchName)) {
             
@@ -278,7 +276,7 @@ function formatWarframeInfo(info) {
         const isCurrentWeek = info.duviri.week === currentWeek;
         
         message += `\n🌀 *Цепь Дувири:* Доступен\n`;
-        message += `📅 *Неделя:* ${info.duviri.week} (сейчас ${currentWeek} из 11)\n`;
+        message += `📅 *Неделя:* ${info.duviri.week} (сейчас ${currentWeek}-я из 11-ти)\n`;
         message += `🧬 *Helminth:* ${info.duviri.helminth}`;
         
         if (isCurrentWeek) {
