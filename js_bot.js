@@ -19,8 +19,6 @@ const weaponsSecondary = require('./weapons_secondary.json');
 const weaponsMelee = require('./weapons_melee.json');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const STATE_FILE = 'bot_state.json';
-const subscribers = new Set(state.subscribers || []);
-const checkedEvents = new Set(state.checkedEvents || []);
 console.log('✓ Загружено оружия:');
 console.log(`  Primary: ${Object.keys(weaponsPrimary).length}`);
 console.log(`  Secondary: ${Object.keys(weaponsSecondary).length}`);
@@ -53,7 +51,8 @@ if (!process.env.BOT_TOKEN) {
 // ========================================================================
 // 2. ИНИЦИАЛИЗАЦИЯ БОТА И СОСТОЯНИЯ
 // ========================================================================
-
+const subscribers = new Set(state.subscribers || []);
+const checkedEvents = new Set(state.checkedEvents || []);
 let state = loadState();
 let checkIntervals = [];
 
