@@ -40,6 +40,7 @@ bot.telegram.setChatMenuButton({
 // Регистрируем команды для меню
 bot.telegram.setMyCommands([
     { command: 'start', description: '🏠 Главное меню' }
+])
 // Проверка токена
 if (!process.env.BOT_TOKEN) {
     console.error('❌ Токен бота не найден!');
