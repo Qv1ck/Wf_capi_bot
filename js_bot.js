@@ -367,28 +367,60 @@ function getLocationStatus(locationName, now) {
     if (!location) return `❌ Локация "${locationName}" не найдена`;
     
     const currentTime = now.getTime();
-    const cycle = location.cycles[0];
-    const startTime = new Date(cycle.start).getTime();
-    const cycleDuration = cycle.duration * 60 * 1000;
     
-    const timeSinceStart = currentTime - startTime;
-    const timeInCycle = timeSinceStart % cycleDuration;
-    const phase1Duration = cycle.phase1_duration * 60 * 1000;
+    // Для Равнин Эйдолона
+    if (locationName === 'Равнины Эйдолона') {
+        const cycleDuration = location.cycle_minutes * 60 * 1000; // 150 минут в мс
+        const dayDuration = location.day_duration * 60 * 1000;    // 100 минут в мс
+        
+        // Время с начала цикла (произвольная точка отсчёта)
+        const timeInCycle = (currentTime % cycleDuration);
+        const isDay = timeInCycle < dayDuration;
+        const timeUntilChange = isDay ? dayDuration - timeInCycle : cycleDuration - timeInCycle;
+        const minutesUntilChange = Math.floor(timeUntilChange / 60000);
+        
+        const currentPhase = isDay ? 'День' : 'Ночь';
+        const emoji = isDay ? '☀️' : '🌙';
+        
+        return `*${locationName}:* ${emoji} ${currentPhase}\n` +
+               `⏰ До смены: ${minutesUntilChange}м`;
+    }
     
-    const isPhase1 = timeInCycle < phase1Duration;
-    const currentPhase = isPhase1 ? cycle.phase1 : cycle.phase2;
-    const timeUntilChange = isPhase1 
-        ? phase1Duration - timeInCycle 
-        : cycleDuration - timeInCycle;
+    // Для Фортуны
+    if (locationName === 'Фортуна') {
+        const cycleDuration = location.cycle_minutes * 60 * 1000; // 270 минут в мс
+        const warmDuration = location.warm_duration * 60 * 1000;  // 200 минут в мс
+        
+        const timeInCycle = (currentTime % cycleDuration);
+        const isWarm = timeInCycle < warmDuration;
+        const timeUntilChange = isWarm ? warmDuration - timeInCycle : cycleDuration - timeInCycle;
+        const minutesUntilChange = Math.floor(timeUntilChange / 60000);
+        
+        const currentPhase = isWarm ? 'Тепло' : 'Холод';
+        const emoji = isWarm ? '☀️' : '❄️';
+        
+        return `*${locationName}:* ${emoji} ${currentPhase}\n` +
+               `⏰ До смены: ${minutesUntilChange}м`;
+    }
     
-    const minutesUntilChange = Math.floor(timeUntilChange / 60000);
+    // Для Камбионского Дрейфа
+    if (locationName === 'Деймос') {
+        const cycleDuration = location.cycle_minutes * 60 * 1000;  // 180 минут в мс
+        const activeDuration = location.active_duration * 60 * 1000; // 120 минут в мс
+        
+        const timeInCycle = (currentTime % cycleDuration);
+        const isActive = timeInCycle < activeDuration;
+        const timeUntilChange = isActive ? activeDuration - timeInCycle : cycleDuration - timeInCycle;
+        const minutesUntilChange = Math.floor(timeUntilChange / 60000);
+        
+        const currentPhase = isActive ? 'Фэз' : 'Воум';
+        const emoji = isActive ? '🔥' : '💤';
+        
+        return `*${locationName}:* ${emoji} ${currentPhase}\n` +
+               `⏰ До смены: ${minutesUntilChange}м`;
+    }
     
-    const emoji = currentPhase.includes('День') || currentPhase.includes('Тепло') 
-        ? '☀️' 
-        : '🌙';
-    
-    return `*${locationName}:* ${emoji} ${currentPhase}\n` +
-           `⏰ До смены: ${minutesUntilChange}м`;
+    return `❌ Неизвестная локация: ${locationName}`;
 }
 
 // ========================================================================
@@ -946,27 +978,49 @@ function checkSingleCycle(locationName, now) {
     if (!location) return;
 
     const currentTime = now.getTime();
-    const cycle = location.cycles[0];
-    const startTime = new Date(cycle.start).getTime();
-    const cycleDuration = cycle.duration * 60 * 1000;
     
-    const timeSinceStart = currentTime - startTime;
-    const timeInCycle = timeSinceStart % cycleDuration;
-    const phase1Duration = cycle.phase1_duration * 60 * 1000;
+    let cycleDuration, phase1Duration, currentPhase, nextPhase;
     
-    const isPhase1 = timeInCycle < phase1Duration;
-    const timeUntilChange = isPhase1 
+    if (locationName === 'Равнины Эйдолона') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.day_duration * 60 * 1000;
+        const timeInCycle = (currentTime % cycleDuration);
+        const isDay = timeInCycle < phase1Duration;
+        currentPhase = isDay ? 'День' : 'Ночь';
+        nextPhase = isDay ? 'Ночь' : 'День';
+    } 
+    else if (locationName === 'Фортуна') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.warm_duration * 60 * 1000;
+        const timeInCycle = (currentTime % cycleDuration);
+        const isWarm = timeInCycle < phase1Duration;
+        currentPhase = isWarm ? 'Тепло' : 'Холод';
+        nextPhase = isWarm ? 'Холод' : 'Тепло';
+    }
+    else if (locationName === 'Деймос') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.active_duration * 60 * 1000;
+        const timeInCycle = (currentTime % cycleDuration);
+        const isActive = timeInCycle < phase1Duration;
+        currentPhase = isActive ? 'Фэз' : 'Воум';
+        nextPhase = isActive ? 'Воум' : 'Фэз';
+    } else {
+        return;
+    }
+    
+    const timeInCycle = (currentTime % cycleDuration);
+    const timeUntilChange = timeInCycle < phase1Duration 
         ? phase1Duration - timeInCycle 
         : cycleDuration - timeInCycle;
     
     const minutesUntilChange = Math.floor(timeUntilChange / 60000);
     
+    // Уведомления за 10 и 5 минут
     [10, 5].forEach(threshold => {
         const eventKey = `${locationName}_${threshold}_${Math.floor(currentTime / (60000 * threshold))}`;
         
         if (minutesUntilChange === threshold && !checkedEvents.has(eventKey)) {
             checkedEvents.add(eventKey);
-            const nextPhase = isPhase1 ? cycle.phase2 : cycle.phase1;
             const message = `⏰ *${locationName}*\n\n` +
                           `Через ${threshold} минут наступит: *${nextPhase}*`;
             sendToSubscribers(message);
