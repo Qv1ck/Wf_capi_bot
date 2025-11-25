@@ -11,6 +11,7 @@ const dropLocationsDB = require('./warframe_drop_locations_ru.json');
 const cyclesDB = require('./warframe_cycles_ru.json');
 const syndicateBountiesDB = require('./warframe_syndicate_bounties_ru.json');
 const nameAliasesDB = require('./warframe_name_aliases_ru.json');
+const warframe_abilities_ru = require('./warframe_abilities_ru.json');
 
 // API парсер
 const { 
@@ -203,7 +204,7 @@ function formatWeaponInfo(weapon, type) {
 }
 
 // ========================================================================
-// ФУНКЦИИ ДЛЯ ВАРФРЕЙМОВ
+// ФУНКЦИЯ ПОИСКА ВАРФРЕЙМОВ
 // ========================================================================
 
 async function searchLocalDB(query) {
@@ -211,81 +212,82 @@ async function searchLocalDB(query) {
     
     console.log(`🔍 Ищу варфрейма: '${normalizedQuery}'`);
     
-    // Проверяем алиасы
-    const englishName = nameAliasesDB[normalizedQuery];
-    const searchName = englishName || normalizedQuery;
+    // Шаг 1: Проверяем алиасы (русский → английский)
+    let englishKey = null;
     
-    console.log(`📝 Поисковое имя: '${searchName}'`);
-    
-    for (const [name, abilities] of Object.entries(abilitiesDB)) {
-        const frameName = abilities.name || name;
-        
-        if (name.toLowerCase().includes(searchName) || 
-            frameName.toLowerCase().includes(searchName)) {
-            
-            console.log(`✅ НАЙДЕНО: ${frameName}`);
-            
-            // Поиск варфрейма в Дувири
-            let duviriInfo = null;
-            try {
-                for (const [key, warframe] of Object.entries(warframesDuviri)) {
-                    if (warframe.name.toLowerCase() === frameName.toLowerCase()) {
-                        duviriInfo = warframe;
-                        console.log(`✅ Найден в Дувири: неделя ${warframe.week}`);
-                        break;
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Ошибка поиска в Дувири:', error.message);
-            }
-            
-            return {
-                title: frameName,
-                abilities: abilities.abilities,
-                dropLocations: dropLocationsDB[name],
-                duviri: duviriInfo
-            };
+    // Ищем в алиасах
+    for (const [key, aliases] of Object.entries(nameAliasesDB)) {
+        // key = "Nokko", aliases = ["Нокко", "нокко", "Гриб", "гриб"]
+        if (key.toLowerCase() === normalizedQuery ||
+            aliases.some(alias => alias.toLowerCase() === normalizedQuery)) {
+            englishKey = key;
+            console.log(`✅ Найден алиас: '${normalizedQuery}' → '${englishKey}'`);
+            break;
         }
     }
     
-    console.log(`❌ Не найдено: '${normalizedQuery}'`);
-    return null;
+    // Если не нашли в алиасах - пробуем напрямую английское имя
+    if (!englishKey) {
+        englishKey = normalizedQuery.charAt(0).toUpperCase() + normalizedQuery.slice(1);
+        console.log(`📝 Пробую английский ключ: '${englishKey}'`);
+    }
+    
+    // Шаг 2: Ищем в базе английских способностей (для структуры)
+    if (!abilitiesDB[englishKey]) {
+        console.log(`❌ Варфрейм '${englishKey}' не найден в базе`);
+        return null;
+    }
+    
+    console.log(`✅ НАЙДЕНО: ${englishKey}`);
+    
+    // Шаг 3: Получаем русское имя и способности
+    const russianData = warframe_abilities_ru[englishKey];
+    const englishAbilities = abilitiesDB[englishKey];
+    
+    // Формируем массив способностей
+    let abilities = [];
+    if (Array.isArray(russianData)) {
+        // Старый формат: просто массив
+        abilities = russianData.map(name => ({ name, description: "" }));
+    } else if (russianData && russianData.abilities) {
+        // Новый формат: объект с abilities
+        abilities = russianData.abilities;
+    } else {
+        // Фолбэк на английские
+        abilities = englishAbilities.map(name => ({ name, description: "" }));
+    }
+    
+    // Русское имя
+    const displayName = russianData?.name || 
+                       Object.keys(nameAliasesDB).find(k => k === englishKey) ||
+                       englishKey;
+    
+    // Шаг 4: Поиск в Дувири
+    let duviriInfo = null;
+    try {
+        for (const [key, warframe] of Object.entries(warframesDuviri)) {
+            if (key.toLowerCase() === englishKey.toLowerCase()) {
+                duviriInfo = warframe;
+                console.log(`✅ Найден в Дувири: неделя ${warframe.week}`);
+                break;
+            }
+        }
+    } catch (error) {
+        console.error('❌ Ошибка поиска в Дувири:', error.message);
+    }
+    
+    return {
+        title: displayName,
+        abilities: abilities,
+        dropLocations: dropLocationsDB[englishKey],
+        duviri: duviriInfo
+    };
 }
 
-function formatWarframeInfo(info) {
-    let message = `🤖 *${info.title}*\n\n`;
-    
-    message += `⚡ *Способности:*\n`;
-    info.abilities.forEach((ability, index) => {
-        message += `${index + 1}. *${ability.name}*\n`;
-    });
-    
-    if (info.dropLocations && info.dropLocations.length > 0) {
-        message += `\n🎯 *Где добыть:*\n`;
-        info.dropLocations.forEach((location) => {
-            const icon = location.part.includes('Чертеж') ? '📜' :
-                        location.part.includes('Нейроптика') ? '🔸' :
-                        location.part.includes('Каркас') ? '🔲' : '📘';
-            message += `${icon} ${location.part}: ${location.location}\n`;
-        });
-    }
-    
-    // Информация о Дувири
-    if (info.duviri) {
-        const currentWeek = getCurrentDuviriWarframeWeek();
-        const isCurrentWeek = info.duviri.week === currentWeek;
-        
-        message += `\n🌀 *Цепь Дувири:* Доступен\n`;
-        message += `📅 *Неделя:* ${info.duviri.week} (сейчас ${currentWeek}-я из 11-ти)\n`;
-        message += `🧬 *Helminth:* ${info.duviri.helminth}`;
-        
-        if (isCurrentWeek) {
-            message += `\n✅ *Доступен прямо сейчас!*`;
-        }
-    }
-    
-    return message;
-}
+// ========================================================================
+// НЕ ЗАБУДЬ ДОБАВИТЬ ИМПОРТ В НАЧАЛЕ:
+// const warframe_abilities_ru = require('./warframe_abilities_ru.json');
+// ========================================================================
 
 // ========================================================================
 // ФУНКЦИИ ДЛЯ ЦИКЛОВ
