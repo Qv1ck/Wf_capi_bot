@@ -51,45 +51,23 @@ if (!process.env.BOT_TOKEN) {
 // ========================================================================
 // 2. ИНИЦИАЛИЗАЦИЯ БОТА И СОСТОЯНИЯ
 // ========================================================================
+let state = loadState();
 const subscribers = new Set(state.subscribers || []);
 const checkedEvents = new Set(state.checkedEvents || []);
-let state = loadState();
 let checkIntervals = [];
-
-//_____________
-//ФУНКЦИИ
-//_____________
-
-// ========================================================================
-// РАБОТА С ФАЙЛАМИ
-// ========================================================================
 
 function saveState() {
     try {
-        const state = {
+        const currentState = {
             subscribers: Array.from(subscribers),
             checkedEvents: Array.from(checkedEvents),
             lastSave: new Date().toISOString()
         };
-        fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+        fs.writeFileSync(STATE_FILE, JSON.stringify(currentState, null, 2));
         console.log(`✓ Состояние сохранено: ${subscribers.size} подписчиков`);
     } catch (error) {
         console.error('❌ Ошибка сохранения:', error.message);
     }
-}
-
-function loadState() {
-    try {
-        if (fs.existsSync(STATE_FILE)) {
-            const data = fs.readFileSync(STATE_FILE, 'utf8');
-            const state = JSON.parse(data);
-            console.log(`✓ Состояние загружено: ${state.subscribers?.length || 0} подписчиков`);
-            return state;
-        }
-    } catch (error) {
-        console.error('❌ Ошибка загрузки:', error.message);
-    }
-    return { subscribers: [], checkedEvents: [] };
 }
 
 // ========================================================================
