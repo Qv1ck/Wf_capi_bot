@@ -1,7 +1,6 @@
 // ========================================================================
 // 1. ИМПОРТЫ И КОНФИГУРАЦИЯ (CONST-БЛОК)
 // ========================================================================
-
 const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const abilitiesDB = require('./warframe_abilities_ru.json');
@@ -18,23 +17,21 @@ const {
 const weaponsPrimary = require('./weapons_primary.json');
 const weaponsSecondary = require('./weapons_secondary.json');
 const weaponsMelee = require('./weapons_melee.json');
+const bot = new Telegraf(process.env.BOT_TOKEN);
+const STATE_FILE = 'bot_state.json';
+const subscribers = new Set(state.subscribers || []);
+const checkedEvents = new Set(state.checkedEvents || []);
 console.log('✓ Загружено оружия:');
 console.log(`  Primary: ${Object.keys(weaponsPrimary).length}`);
 console.log(`  Secondary: ${Object.keys(weaponsSecondary).length}`);
 console.log(`  Melee: ${Object.keys(weaponsMelee).length}`);
+bot.telegram.setChatMenuButton({
+    menu_button: {
+        type: 'commands'
+    }
+}).catch(err => console.log('Не удалось установить меню:', err));
 
-// Проверка токена
-if (!process.env.BOT_TOKEN) {
-    console.error('❌ Токен бота не найден!');
-    process.exit(1);
-}
-
-// ========================================================================
-// 2. ИНИЦИАЛИЗАЦИЯ БОТА И СОСТОЯНИЯ
-// ========================================================================
-
-const bot = new Telegraf(process.env.BOT_TOKEN);
-const STATE_FILE = 'bot_state.json';
+// Регистрируем команды для меню
 bot.telegram.setMyCommands([
     { command: 'start', description: '🏠 Главное меню' },
     { command: 'baro', description: '💎 Baro Ki\'Teer' },
@@ -47,9 +44,17 @@ bot.telegram.setMyCommands([
     { command: 'unsubscribe', description: '❌ Отписаться' }
 ]).catch(err => console.log('Не удалось зарегистрировать команды:', err));
 
+// Проверка токена
+if (!process.env.BOT_TOKEN) {
+    console.error('❌ Токен бота не найден!');
+    process.exit(1);
+}
+
+// ========================================================================
+// 2. ИНИЦИАЛИЗАЦИЯ БОТА И СОСТОЯНИЯ
+// ========================================================================
+
 let state = loadState();
-const subscribers = new Set(state.subscribers || []);
-const checkedEvents = new Set(state.checkedEvents || []);
 let checkIntervals = [];
 
 //_____________
