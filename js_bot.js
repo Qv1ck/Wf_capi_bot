@@ -770,7 +770,7 @@ bot.action('cmd_status', async (ctx) => {
     const message = `🕒 *Текущее время: ${now.toUTCString()}*\n\n` +
                     `${getLocationStatus('Равнины Эйдолона', now)}\n\n` +
                     `${getLocationStatus('Фортуна', now)}\n\n` +
-                    `${getLocationStatus('Камбионский Дрейф', now)}\n\n` +
+                    `${getLocationStatus('Деймос', now)}\n\n` +
                     `📊 *Подписчиков:* ${subscribers.size}`;
     ctx.replyWithMarkdown(message);
 });
