@@ -103,7 +103,7 @@ function loadState() {
 // ========================================================================
 
 function getCurrentDuviriWeek() {
-    const startDate = new Date('2023-04-26T00:00:00Z');
+    const startDate = new Date('2023-05-30T00:00:00Z');
     const now = new Date();
     
     const diffTime = now - startDate;
