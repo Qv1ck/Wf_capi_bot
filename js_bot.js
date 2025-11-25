@@ -32,6 +32,9 @@ if (!process.env.BOT_TOKEN) {
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const STATE_FILE = 'bot_state.json';
+bot.telegram.setMyCommands([
+    { command: 'start', description: '🏠 Главное меню' }
+]).catch(err => console.log('Не удалось зарегистрировать команды:', err));
 
 let state = loadState();
 const subscribers = new Set(state.subscribers || []);
