@@ -1,9 +1,9 @@
-const TelegramBot = require('node-telegram-bot-api');
+const { Telegraf } = require('telegraf');
 const XLSX = require('xlsx');
 const fs = require('fs');
 
 const token = '7748691142:AAE_bH4h7ChiVLA_zW2G7XaN8z83ltFJPn0';
-const bot = new TelegramBot(token, { polling: true });
+const bot = new Telegraf(token);
 
 const EXCEL_FILE = 'data.xlsx';
 
@@ -37,9 +37,8 @@ function searchInExcel(query) {
     });
 }
 
-bot.onText(/\/start/, (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, 
+bot.command('start', (ctx) => {
+    ctx.reply(
         'Добро пожаловать! Доступные команды:\n' +
         '/add Имя|Телефон|Email|Адрес - добавить запись\n' +
         '/search Текст - найти записи\n' +
@@ -48,14 +47,12 @@ bot.onText(/\/start/, (msg) => {
     );
 });
 
-bot.onText(/\/add (.+)/, (msg, match) => {
-    const chatId = msg.chat.id;
-    const input = match[1];
+bot.command('add', (ctx) => {
+    const input = ctx.message.text.replace('/add', '').trim();
     const parts = input.split('|').map(p => p.trim());
     
     if (parts.length !== 4) {
-        bot.sendMessage(chatId, '❌ Неверный формат! Используйте: /add Имя|Телефон|Email|Адрес');
-        return;
+        return ctx.reply('❌ Неверный формат! Используйте: /add Имя|Телефон|Email|Адрес');
     }
     
     const data = readExcel();
@@ -67,23 +64,20 @@ bot.onText(/\/add (.+)/, (msg, match) => {
     });
     
     writeExcel(data);
-    bot.sendMessage(chatId, '✅ Запись добавлена!');
+    ctx.reply('✅ Запись добавлена!');
 });
 
-bot.onText(/\/search (.+)/, (msg, match) => {
-    const chatId = msg.chat.id;
-    const query = match[1].trim();
+bot.command('search', (ctx) => {
+    const query = ctx.message.text.replace('/search', '').trim();
     
     if (!query) {
-        bot.sendMessage(chatId, '❌ Пожалуйста, укажите поисковый запрос после команды /search');
-        return;
+        return ctx.reply('❌ Пожалуйста, укажите поисковый запрос после команды /search');
     }
     
     const results = searchInExcel(query);
     
     if (results.length === 0) {
-        bot.sendMessage(chatId, '❌ Ничего не найдено. Попробуй другой запрос.');
-        return;
+        return ctx.reply('❌ Ничего не найдено. Попробуй другой запрос.');
     }
     
     let message = `✅ Найдено записей: ${results.length}\n\n`;
@@ -97,16 +91,14 @@ bot.onText(/\/search (.+)/, (msg, match) => {
         message += `\n`;
     });
     
-    bot.sendMessage(chatId, message);
+    ctx.reply(message);
 });
 
-bot.onText(/\/list/, (msg) => {
-    const chatId = msg.chat.id;
+bot.command('list', (ctx) => {
     const data = readExcel();
     
     if (data.length === 0) {
-        bot.sendMessage(chatId, '📋 База данных пуста.');
-        return;
+        return ctx.reply('📋 База данных пуста.');
     }
     
     let message = `📋 Всего записей: ${data.length}\n\n`;
@@ -115,22 +107,27 @@ bot.onText(/\/list/, (msg) => {
         message += `${index + 1}. ${item['Имя']} - ${item['Телефон']}\n`;
     });
     
-    bot.sendMessage(chatId, message);
+    ctx.reply(message);
 });
 
-bot.onText(/\/delete (\d+)/, (msg, match) => {
-    const chatId = msg.chat.id;
-    const id = parseInt(match[1]) - 1;
+bot.command('delete', (ctx) => {
+    const input = ctx.message.text.replace('/delete', '').trim();
+    const id = parseInt(input) - 1;
     const data = readExcel();
     
-    if (id < 0 || id >= data.length) {
-        bot.sendMessage(chatId, '❌ Запись с таким ID не найдена.');
-        return;
+    if (isNaN(id) || id < 0 || id >= data.length) {
+        return ctx.reply('❌ Запись с таким ID не найдена.');
     }
     
     data.splice(id, 1);
     writeExcel(data);
-    bot.sendMessage(chatId, '✅ Запись удалена!');
+    ctx.reply('✅ Запись удалена!');
 });
 
-console.log('Бот запущен...');
+bot.launch()
+    .then(() => console.log('Бот запущен...'))
+    .catch(err => console.error('Ошибка запуска:', err));
+
+// Graceful shutdown
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
