@@ -1,5 +1,5 @@
 // ========================================================================
-// WARFRAME BOT V3 FINAL - COMPLETE VERSION
+// WARFRAME BOT V3 FINAL - ЛОКАЛЬНАЯ ВЕРСИЯ
 // ========================================================================
 
 const { Telegraf, Markup } = require('telegraf');
@@ -12,14 +12,6 @@ const cyclesDB = require('./warframe_cycles_ru.json');
 const syndicateBountiesDB = require('./warframe_syndicate_bounties_ru.json');
 const nameAliasesDB = require('./warframe_name_aliases_ru.json');
 const warframe_abilities_ru = require('./warframe_abilities_ru.json');
-
-// API парсер
-const { 
-    getFormattedSortie, 
-    getFormattedBaro, 
-    getFormattedInvasions, 
-    getFormattedCycles 
-} = require('./warframe_parser_v3');
 
 // Базы оружия
 const weaponsPrimary = require('./weapons_primary.json');
@@ -64,9 +56,8 @@ bot.telegram.setMyCommands([
     { command: 'primary', description: '🔫 Основное оружие' },
     { command: 'secondary', description: '🔫 Вторичное оружие' },
     { command: 'melee', description: '⚔️ Ближнее оружие' },
-    { command: 'duviri', description: '🌀 Неделя Дувири (оружие)' },
-    { command: 'warframes', description: '🤖 Варфреймы Дувири' },
-    { command: 'status', description: '📊 Статус' },
+    { command: 'chain_guns', description: '🌀 Цепь Дувири (оружие)' },
+    { command: 'chain_frame', description: '🤖 Цепь Дувири (варфреймы)' },
     { command: 'subscribe', description: '🔔 Подписаться' }
 ]).catch(err => console.log('Не удалось зарегистрировать команды:', err));
 
@@ -326,7 +317,167 @@ const augmentMods = {
 };
 
 // ========================================================================
-// ФУНКЦИЯ ПОИСКА ВАРФРЕЙМОВ (ИСПРАВЛЕНА!)
+// ФУНКЦИИ РАСЧЁТА ЦИКЛОВ
+// ========================================================================
+
+function getEarthCycle() {
+    const now = Date.now();
+    const cycleLength = 4 * 60 * 60 * 1000; // 4 часа
+    const dayLength = 2 * 60 * 60 * 1000;   // 2 часа день
+    
+    const timeInCycle = now % cycleLength;
+    
+    const isDay = timeInCycle < dayLength;
+    const timeLeft = isDay 
+        ? dayLength - timeInCycle 
+        : cycleLength - timeInCycle;
+    
+    return {
+        isDay,
+        state: isDay ? 'День' : 'Ночь',
+        timeLeft: formatTime(timeLeft)
+    };
+}
+
+function getCycleStatus(locationKey) {
+    const location = cyclesDB[locationKey];
+    if (!location) return null;
+    
+    const now = Date.now();
+    
+    // Определяем параметры цикла
+    let cycleDuration, phase1Duration, phase1Name, phase2Name;
+    
+    if (locationKey === 'Равнины Эйдолона') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.day_duration * 60 * 1000;
+        phase1Name = 'День';
+        phase2Name = 'Ночь';
+    } else if (locationKey === 'Фортуна') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.warm_duration * 60 * 1000;
+        phase1Name = 'Тепло';
+        phase2Name = 'Холод';
+    } else if (locationKey === 'Камбионский Дрейф') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.active_duration * 60 * 1000;
+        phase1Name = 'Фэз';
+        phase2Name = 'Воум';
+    } else {
+        return null;
+    }
+    
+    const startDate = new Date('2021-01-01T00:00:00Z').getTime();
+    const timeSinceStart = now - startDate;
+    const timeInCycle = timeSinceStart % cycleDuration;
+    
+    const isPhase1 = timeInCycle < phase1Duration;
+    const currentPhase = isPhase1 ? phase1Name : phase2Name;
+    const timeUntilChange = isPhase1 
+        ? phase1Duration - timeInCycle 
+        : cycleDuration - timeInCycle;
+    
+    return {
+        phase: currentPhase,
+        timeLeft: formatTime(timeUntilChange),
+        isPhase1
+    };
+}
+
+function formatTime(milliseconds) {
+    if (milliseconds < 0) return 'Истекло';
+    
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    let result = '';
+    if (hours > 0) result += `${hours}ч `;
+    result += `${minutes}м`;
+
+    return result.trim();
+}
+
+function getFormattedCycles(location = null) {
+    const locationMap = {
+        'цетус': 'Цетус',
+        'cetus': 'Цетус',
+        'равнины': 'Цетус',
+        'эйдолон': 'Цетус',
+        'фортуна': 'Фортуна',
+        'fortuna': 'Фортуна',
+        'vallis': 'Фортуна',
+        'венера': 'Фортуна',
+        'venus': 'Фортуна',
+        'деймос': 'Деймос',
+        'deimos': 'Деймос',
+        'камбион': 'Деймос',
+        'дрейф': 'Деймос',
+        'земля': 'Земля',
+        'earth': 'Земля'
+    };
+    
+    // Если указана конкретная локация
+    if (location) {
+        const loc = location.toLowerCase().trim();
+        const targetLocation = locationMap[loc];
+        
+        if (!targetLocation) {
+            return '❌ Локация не найдена. Доступные: Цетус, Фортуна, Деймос, Земля';
+        }
+        
+        if (targetLocation === 'Земля') {
+            const earth = getEarthCycle();
+            const emoji = earth.isDay ? '☀️' : '🌙';
+            return `🌍 *Земля*\n\n${emoji} ${earth.state}\n⏰ До смены: ${earth.timeLeft}`;
+        } else if (targetLocation === 'Цетус') {
+            const cetus = getCycleStatus('Равнины Эйдолона');
+            const emoji = cetus.phase === 'День' ? '☀️' : '🌙';
+            return `🌍 *Цетус*\n\n${emoji} ${cetus.phase}\n⏰ До смены: ${cetus.timeLeft}`;
+        } else if (targetLocation === 'Фортуна') {
+            const fortuna = getCycleStatus('Фортуна');
+            const emoji = fortuna.phase === 'Тепло' ? '☀️' : '❄️';
+            return `🌍 *Фортуна*\n\n${emoji} ${fortuna.phase}\n⏰ До смены: ${fortuna.timeLeft}`;
+        } else if (targetLocation === 'Деймос') {
+            const deimos = getCycleStatus('Камбионский Дрейф');
+            const emoji = deimos.phase === 'Фэз' ? '☀️' : '🌙';
+            return `🌍 *Деймос*\n\n${emoji} ${deimos.phase}\n⏰ До смены: ${deimos.timeLeft}`;
+        }
+    }
+    
+    // Показываем все циклы
+    const earth = getEarthCycle();
+    const cetus = getCycleStatus('Равнины Эйдолона');
+    const fortuna = getCycleStatus('Фортуна');
+    const deimos = getCycleStatus('Камбионский Дрейф');
+    
+    let message = `🌍 *ЦИКЛЫ*\n\n`;
+    
+    // Земля
+    const earthEmoji = earth.isDay ? '☀️' : '🌙';
+    message += `*Земля:* ${earthEmoji} ${earth.state}\n`;
+    message += `⏰ До смены: ${earth.timeLeft}\n\n`;
+    
+    // Цетус (Равнины Эйдолона)
+    const cetusEmoji = cetus.phase === 'День' ? '☀️' : '🌙';
+    message += `*Цетус:* ${cetusEmoji} ${cetus.phase}\n`;
+    message += `⏰ До смены: ${cetus.timeLeft}\n\n`;
+    
+    // Фортуна
+    const fortunaEmoji = fortuna.phase === 'Тепло' ? '☀️' : '❄️';
+    message += `*Фортуна:* ${fortunaEmoji} ${fortuna.phase}\n`;
+    message += `⏰ До смены: ${fortuna.timeLeft}\n\n`;
+    
+    // Деймос
+    const deimosEmoji = deimos.phase === 'Фэз' ? '☀️' : '🌙';
+    message += `*Деймос:* ${deimosEmoji} ${deimos.phase}\n`;
+    message += `⏰ До смены: ${deimos.timeLeft}`;
+    
+    return message;
+}
+
+// ========================================================================
+// ФУНКЦИЯ ПОИСКА ВАРФРЕЙМОВ
 // ========================================================================
 
 async function searchLocalDB(query) {
@@ -334,11 +485,10 @@ async function searchLocalDB(query) {
     
     console.log(`🔍 Ищу варфрейма: '${normalizedQuery}'`);
     
-    // Шаг 1: Проверяем алиасы (русский → английский) с ЧАСТИЧНЫМ совпадением
     let englishKey = null;
     let bestMatch = null;
     
-    // Сначала пробуем точное совпадение
+    // Точное совпадение
     for (const [key, aliases] of Object.entries(nameAliasesDB)) {
         if (key.toLowerCase() === normalizedQuery ||
             aliases.some(alias => alias.toLowerCase() === normalizedQuery)) {
@@ -348,19 +498,16 @@ async function searchLocalDB(query) {
         }
     }
     
-    // Если не нашли точное - ищем частичное
+    // Частичное совпадение
     if (!englishKey) {
         for (const [key, aliases] of Object.entries(nameAliasesDB)) {
-            // Проверяем, содержится ли query в ключе или алиасах
             if (key.toLowerCase().includes(normalizedQuery) ||
                 aliases.some(alias => alias.toLowerCase().includes(normalizedQuery))) {
                 
-                // Берём первое найденное
                 if (!bestMatch) {
                     bestMatch = key;
                 }
                 
-                // Но если найдено совпадение с начала - приоритет ему
                 if (key.toLowerCase().startsWith(normalizedQuery) ||
                     aliases.some(alias => alias.toLowerCase().startsWith(normalizedQuery))) {
                     bestMatch = key;
@@ -375,13 +522,12 @@ async function searchLocalDB(query) {
         }
     }
     
-    // Если не нашли в алиасах - пробуем напрямую английское имя
+    // Английское имя
     if (!englishKey) {
         englishKey = normalizedQuery.charAt(0).toUpperCase() + normalizedQuery.slice(1);
         console.log(`📝 Пробую английский ключ: '${englishKey}'`);
     }
     
-    // Шаг 2: Ищем в базе английских способностей (для структуры)
     if (!abilitiesDB[englishKey]) {
         console.log(`❌ Варфрейм '${englishKey}' не найден в базе`);
         return null;
@@ -389,29 +535,22 @@ async function searchLocalDB(query) {
     
     console.log(`✅ НАЙДЕНО: ${englishKey}`);
     
-    // Шаг 3: Получаем русское имя и способности
     const russianData = warframe_abilities_ru[englishKey];
     const englishAbilities = abilitiesDB[englishKey];
     
-    // Формируем массив способностей
     let abilities = [];
     if (Array.isArray(russianData)) {
-        // Старый формат: просто массив
         abilities = russianData.map(name => ({ name, description: "" }));
     } else if (russianData && russianData.abilities) {
-        // Новый формат: объект с abilities
         abilities = russianData.abilities;
     } else {
-        // Фолбэк на английские
         abilities = englishAbilities.map(name => ({ name, description: "" }));
     }
     
-    // Русское имя
     const displayName = russianData?.name || 
                        Object.keys(nameAliasesDB).find(k => k === englishKey) ||
                        englishKey;
     
-    // Шаг 4: Поиск в Дувири
     let duviriInfo = null;
     try {
         for (const [key, warframe] of Object.entries(warframesDuviri)) {
@@ -421,11 +560,15 @@ async function searchLocalDB(query) {
                 break;
             }
         }
+        
+        if (!duviriInfo) {
+            console.log(`❌ Цепь Дувири: ${englishKey} не найден`);
+            duviriInfo = false; // Помечаем что проверили, но не нашли
+        }
     } catch (error) {
         console.error('❌ Ошибка поиска в Дувири:', error.message);
     }
     
-    // Шаг 5: Helminth и аугменты
     const helminthInfo = helminthAbilities[englishKey];
     const augments = augmentMods[englishKey] || [];
     
@@ -439,10 +582,6 @@ async function searchLocalDB(query) {
         augments: augments
     };
 }
-
-// ========================================================================
-// ФОРМАТИРОВАНИЕ ИНФОРМАЦИИ О ВАРФРЕЙМЕ
-// ========================================================================
 
 function formatWarframeInfo(info) {
     let message = `🤖 *${info.title}*\n\n`;
@@ -497,11 +636,11 @@ function formatWarframeInfo(info) {
     }
     
     // Дувири
-    if (info.duviri) {
+    if (info.duviri && info.duviri !== false) {
         const currentWeek = getCurrentDuviriWarframeWeek();
         const isCurrentWeek = info.duviri.week === currentWeek;
         
-        message += `🌀 *Дувири:*\n`;
+        message += `🌀 *Цепь Дувири:*\n`;
         message += `📅 Неделя: ${info.duviri.week} из 11\n`;
         message += `💉 Гельминт: ${info.duviri.helminth}\n`;
         
@@ -510,38 +649,11 @@ function formatWarframeInfo(info) {
         } else {
             message += `⏰ Будет доступен на ${info.duviri.week} неделе (сейчас ${currentWeek} из 11)\n`;
         }
+    } else if (info.duviri === false) {
+        message += `❌ *Цепь Дувири:* Недоступен\n`;
     }
     
     return message;
-}
-
-function getLocationStatus(locationName, now) {
-    const location = cyclesDB[locationName];
-    if (!location) return `❌ Локация "${locationName}" не найдена`;
-    
-    const currentTime = now.getTime();
-    const cycle = location.cycles[0];
-    const startTime = new Date(cycle.start).getTime();
-    const cycleDuration = cycle.duration * 60 * 1000;
-    
-    const timeSinceStart = currentTime - startTime;
-    const timeInCycle = timeSinceStart % cycleDuration;
-    const phase1Duration = cycle.phase1_duration * 60 * 1000;
-    
-    const isPhase1 = timeInCycle < phase1Duration;
-    const currentPhase = isPhase1 ? cycle.phase1 : cycle.phase2;
-    const timeUntilChange = isPhase1 
-        ? phase1Duration - timeInCycle 
-        : cycleDuration - timeInCycle;
-    
-    const minutesUntilChange = Math.floor(timeUntilChange / 60000);
-    
-    const emoji = currentPhase.includes('День') || currentPhase.includes('Тепло') 
-        ? '☀️' 
-        : '🌙';
-    
-    return `*${locationName}:* ${emoji} ${currentPhase}\n` +
-           `⏰ До смены: ${minutesUntilChange}м`;
 }
 
 // ========================================================================
@@ -556,23 +668,15 @@ bot.start((ctx) => {
     
     const keyboard = Markup.inlineKeyboard([
         [
-            Markup.button.callback('📋 Вылазка', 'cmd_sortie'),
-            Markup.button.callback('💎 Baro', 'cmd_baro')
+            Markup.button.callback('🌍 Циклы', 'cmd_cycles'),
+            Markup.button.callback('🔍 Варфрейм', 'cmd_search')
         ],
         [
-            Markup.button.callback('⚔️ Вторжения', 'cmd_invasions'),
-            Markup.button.callback('🌍 Циклы', 'cmd_cycles')
+            Markup.button.callback('🔫 Оружие', 'cmd_weapon'),
+            Markup.button.callback('🌀 Цепь (оружие)', 'cmd_chain_guns')
         ],
         [
-            Markup.button.callback('🔍 Варфрейм', 'cmd_search'),
-            Markup.button.callback('🔫 Оружие', 'cmd_weapon')
-        ],
-        [
-            Markup.button.callback('🌀 Дувири', 'cmd_duviri'),
-            Markup.button.callback('🤖 Варфреймы', 'cmd_warframes')
-        ],
-        [
-            Markup.button.callback('📊 Статус', 'cmd_status'),
+            Markup.button.callback('🤖 Цепь (варфреймы)', 'cmd_chain_frame'),
             Markup.button.callback('🔔 Подписки', 'cmd_subscribe')
         ]
     ]);
@@ -683,27 +787,27 @@ bot.command('melee', async (ctx) => {
     }
 });
 
-bot.command('duviri', async (ctx) => {
-    console.log('🌀 Команда /duviri вызвана');
+bot.command('chain_guns', async (ctx) => {
+    console.log('🌀 Команда /chain_guns вызвана');
     
     try {
         const currentWeek = getCurrentDuviriWeek();
         const weekWeapons = getWeekWeapons(currentWeek);
         
-        let message = `🌀 *ДУВИРИЙСКАЯ ЦЕПЬ (ОРУЖИЕ)*\n\n`;
+        let message = `🌀 *ЦЕПЬ ДУВИРИ (ОРУЖИЕ)*\n\n`;
         message += `📅 *Текущая неделя:* ${currentWeek} из 6\n\n`;
         message += `⚡ *Доступные Инкарноны:*\n`;
         message += weekWeapons.join('\n');
         
         await ctx.replyWithMarkdown(message);
     } catch (error) {
-        console.error('❌ Ошибка /duviri:', error);
+        console.error('❌ Ошибка /chain_guns:', error);
         await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
     }
 });
 
-bot.command('warframes', async (ctx) => {
-    console.log('🤖 Команда /warframes вызвана');
+bot.command('chain_frame', async (ctx) => {
+    console.log('🤖 Команда /chain_frame вызвана');
     
     try {
         const currentWeek = getCurrentDuviriWarframeWeek();
@@ -715,15 +819,57 @@ bot.command('warframes', async (ctx) => {
             }
         }
         
-        let message = `🤖 *ВАРФРЕЙМЫ ДУВИРИ*\n\n`;
+        let message = `🤖 *ЦЕПЬ ДУВИРИ (ВАРФРЕЙМЫ)*\n\n`;
         message += `📅 *Текущая неделя:* ${currentWeek} из 11\n\n`;
         message += `⚡ *Доступные варфреймы:*\n`;
         message += weekFrames.join('\n');
         
         await ctx.replyWithMarkdown(message);
     } catch (error) {
-        console.error('❌ Ошибка /warframes:', error);
+        console.error('❌ Ошибка /chain_frame:', error);
         await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+});
+
+// ========================================================================
+// КОМАНДА /time (ЕДИНСТВЕННАЯ ДЛЯ ЦИКЛОВ)
+// ========================================================================
+
+bot.command(['time', 'cycles'], async (ctx) => {
+    console.log('🌍 Команда /time вызвана');
+    
+    try {
+        const args = ctx.message.text.split(' ').slice(1).join(' ').trim();
+        const message = getFormattedCycles(args || null);
+        
+        await ctx.replyWithMarkdown(message);
+    } catch (error) {
+        console.error('❌ Ошибка /time:', error);
+        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+});
+
+// ========================================================================
+// КОМАНДА /search
+// ========================================================================
+
+bot.command('search', async (ctx) => {
+    let query = ctx.message.text.replace(/\/search(@\w+)?/, '').trim();
+    
+    if (!query) {
+        return ctx.reply('Использование: /search <название варфрейма>\n\nПример: /search Excalibur');
+    }
+
+    console.log(`✓ Поиск: '${query}' от ${ctx.from.first_name}`);
+    
+    const info = await searchLocalDB(query);
+    
+    if (info) {
+        console.log(`✓ Найдено: ${info.title}`);
+        await ctx.replyWithMarkdown(formatWarframeInfo(info));
+    } else {
+        console.log(`✗ Не найдено: '${query}'`);
+        await ctx.reply('❌ Ничего не найдено. Попробуй другой запрос.');
     }
 });
 
@@ -731,59 +877,15 @@ bot.command('warframes', async (ctx) => {
 // CALLBACK КНОПКИ
 // ========================================================================
 
-bot.action('cmd_sortie', async (ctx) => {
-    await ctx.answerCbQuery();
-    
-    try {
-        const loading = await ctx.reply('⏳ Получаю данные о вылазке...');
-        const info = await getFormattedSortie();
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
-    } catch (error) {
-        console.error('Ошибка /sortie:', error);
-        await ctx.reply('❌ Не удалось получить данные о вылазке');
-    }
-});
-
-bot.action('cmd_baro', async (ctx) => {
-    await ctx.answerCbQuery();
-    
-    try {
-        const loading = await ctx.reply('⏳ Получаю данные о Baro...');
-        const info = await getFormattedBaro();
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
-    } catch (error) {
-        console.error('Ошибка /baro:', error);
-        await ctx.reply('❌ Не удалось получить данные о Baro');
-    }
-});
-
-bot.action('cmd_invasions', async (ctx) => {
-    await ctx.answerCbQuery();
-    
-    try {
-        const loading = await ctx.reply('⏳ Получаю данные о вторжениях...');
-        const info = await getFormattedInvasions();
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
-    } catch (error) {
-        console.error('Ошибка /invasions:', error);
-        await ctx.reply('❌ Не удалось получить данные о вторжениях');
-    }
-});
-
 bot.action('cmd_cycles', async (ctx) => {
     await ctx.answerCbQuery();
     
     try {
-        const loading = await ctx.reply('⏳ Получаю данные о циклах...');
-        const info = await getFormattedCycles();
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
+        const message = getFormattedCycles();
+        await ctx.replyWithMarkdown(message);
     } catch (error) {
-        console.error('Ошибка /cycles:', error);
-        await ctx.reply('❌ Не удалось получить данные о циклах');
+        console.error('Ошибка cmd_cycles:', error);
+        await ctx.reply('❌ Произошла ошибка при получении циклов');
     }
 });
 
@@ -851,13 +953,13 @@ bot.action('weapon_melee', async (ctx) => {
     );
 });
 
-bot.action('cmd_duviri', async (ctx) => {
+bot.action('cmd_chain_guns', async (ctx) => {
     await ctx.answerCbQuery();
     
     const currentWeek = getCurrentDuviriWeek();
     const weekWeapons = getWeekWeapons(currentWeek);
     
-    let message = `🌀 *ДУВИРИЙСКАЯ ЦЕПЬ (ОРУЖИЕ)*\n\n`;
+    let message = `🌀 *ЦЕПЬ ДУВИРИ (ОРУЖИЕ)*\n\n`;
     message += `📅 *Текущая неделя:* ${currentWeek} из 6\n\n`;
     message += `⚡ *Доступные Инкарноны:*\n`;
     message += weekWeapons.join('\n');
@@ -865,7 +967,7 @@ bot.action('cmd_duviri', async (ctx) => {
     await ctx.replyWithMarkdown(message);
 });
 
-bot.action('cmd_warframes', async (ctx) => {
+bot.action('cmd_chain_frame', async (ctx) => {
     await ctx.answerCbQuery();
     
     const currentWeek = getCurrentDuviriWarframeWeek();
@@ -877,39 +979,12 @@ bot.action('cmd_warframes', async (ctx) => {
         }
     }
     
-    let message = `🤖 *ВАРФРЕЙМЫ ДУВИРИ*\n\n`;
+    let message = `🤖 *ЦЕПЬ ДУВИРИ (ВАРФРЕЙМЫ)*\n\n`;
     message += `📅 *Текущая неделя:* ${currentWeek} из 11\n\n`;
     message += `⚡ *Доступные варфреймы:*\n`;
     message += weekFrames.join('\n');
     
     await ctx.replyWithMarkdown(message);
-});
-
-bot.action('cmd_status', async (ctx) => {
-    await ctx.answerCbQuery();
-    
-    try {
-        const now = new Date();
-        
-        // Получаем циклы Земли из парсера
-        let earthCycle = '';
-        try {
-            const cyclesInfo = await getFormattedCycles();
-            earthCycle = cyclesInfo; // Парсер уже возвращает форматированную строку
-        } catch (error) {
-            console.error('Ошибка получения циклов Земли:', error);
-            earthCycle = '❌ Не удалось получить данные о Земле';
-        }
-        
-        let message = `🕒 *Текущее время: ${now.toUTCString()}*\n\n`;
-        message += earthCycle + '\n\n';
-        message += `📊 *Подписчиков:* ${subscribers.size}`;
-        
-        ctx.replyWithMarkdown(message);
-    } catch (error) {
-        console.error('Ошибка cmd_status:', error);
-        await ctx.reply('❌ Произошла ошибка при получении статуса');
-    }
 });
 
 bot.action('cmd_subscribe', async (ctx) => {
@@ -941,119 +1016,6 @@ bot.action('sub_no', async (ctx) => {
         saveState();
     }
     ctx.reply('❌ Вы отписаны от уведомлений');
-});
-
-// ========================================================================
-// КОМАНДЫ API
-// ========================================================================
-
-bot.command('sortie', async (ctx) => {
-    try {
-        const loading = await ctx.reply('⏳ Получаю данные о вылазке...');
-        const info = await getFormattedSortie();
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
-    } catch (error) {
-        console.error('Ошибка /sortie:', error);
-        await ctx.reply('❌ Не удалось получить данные');
-    }
-});
-
-bot.command('baro', async (ctx) => {
-    try {
-        const loading = await ctx.reply('⏳ Получаю данные о Baro...');
-        const info = await getFormattedBaro();
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
-    } catch (error) {
-        console.error('Ошибка /baro:', error);
-        await ctx.reply('❌ Не удалось получить данные');
-    }
-});
-
-bot.command('invasions', async (ctx) => {
-    try {
-        const loading = await ctx.reply('⏳ Получаю данные о вторжениях...');
-        const info = await getFormattedInvasions();
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
-    } catch (error) {
-        console.error('Ошибка /invasions:', error);
-        await ctx.reply('❌ Не удалось получить данные');
-    }
-});
-
-bot.command(['time', 'cycles'], async (ctx) => {
-    try {
-        let location = ctx.message.text.split(' ').slice(1).join(' ').trim();
-        
-        const loading = await ctx.reply('⏳ Получаю данные о циклах...');
-        const info = await getFormattedCycles(location || null);
-        await ctx.telegram.deleteMessage(ctx.chat.id, loading.message_id);
-        await ctx.replyWithMarkdown(info);
-    } catch (error) {
-        console.error('Ошибка /time:', error);
-        await ctx.reply('❌ Не удалось получить данные');
-    }
-});
-
-// ========================================================================
-// КОМАНДЫ ВАРФРЕЙМОВ
-// ========================================================================
-
-bot.command('search', async (ctx) => {
-    let query = ctx.message.text.replace(/\/search(@\w+)?/, '').trim();
-    
-    if (!query) {
-        return ctx.reply('Использование: /search <название варфрейма>\n\nПример: /search Excalibur');
-    }
-
-    console.log(`✓ Поиск: '${query}' от ${ctx.from.first_name}`);
-    
-    const info = await searchLocalDB(query);
-    
-    if (info) {
-        console.log(`✓ Найдено: ${info.title}`);
-        await ctx.replyWithMarkdown(formatWarframeInfo(info));
-    } else {
-        console.log(`✗ Не найдено: '${query}'`);
-        await ctx.reply('❌ Ничего не найдено. Попробуй другой запрос.');
-    }
-});
-
-bot.command('status', async (ctx) => {
-    try {
-        const location = ctx.message.text.replace('/status', '').trim().toLowerCase();
-        
-        const now = new Date();
-        
-        // Получаем циклы Земли из парсера
-        let earthCycle = '';
-        try {
-            const cyclesInfo = await getFormattedCycles();
-            earthCycle = cyclesInfo;
-        } catch (error) {
-            console.error('Ошибка получения циклов Земли:', error);
-            earthCycle = '❌ Не удалось получить данные о Земле';
-        }
-        
-        let message = '';
-        
-        if (!location) {
-            message = `🕒 *Текущее время: ${now.toUTCString()}*\n\n`;
-            message += earthCycle + '\n\n';
-            message += `⏰ *Уведомления приходят за:* 5 и 2 мин. до смены цикла\n\n`;
-            message += `📊 *Подписчиков:* ${subscribers.size}`;
-        } else {
-            // Здесь можно добавить обработку конкретных локаций
-            message = earthCycle;
-        }
-        
-        ctx.replyWithMarkdown(message);
-    } catch (error) {
-        console.error('Ошибка /status:', error);
-        await ctx.reply('❌ Произошла ошибка при получении статуса');
-    }
 });
 
 // ========================================================================
@@ -1114,23 +1076,46 @@ async function sendToSubscribers(message) {
 function checkCycles() {
     const now = new Date();
     
-    ['Равнины Эйдолона', 'Фортуна', 'Камбионский Дрейф'].forEach(locationName => {
-        checkSingleCycle(locationName, now);
+    ['Равнины Эйдолона', 'Фортуна', 'Камбионский Дрейф'].forEach(locationKey => {
+        checkSingleCycle(locationKey, now);
     });
 }
 
-function checkSingleCycle(locationName, now) {
-    const location = cyclesDB[locationName];
+function checkSingleCycle(locationKey, now) {
+    const location = cyclesDB[locationKey];
     if (!location) return;
 
     const currentTime = now.getTime();
-    const cycle = location.cycles[0];
-    const startTime = new Date(cycle.start).getTime();
-    const cycleDuration = cycle.duration * 60 * 1000;
+    
+    let cycleDuration, phase1Duration, phase1Name, phase2Name, displayName;
+    
+    if (locationKey === 'Равнины Эйдолона') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.day_duration * 60 * 1000;
+        phase1Name = 'День';
+        phase2Name = 'Ночь';
+        displayName = 'Цетус';
+    } else if (locationKey === 'Фортуна') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.warm_duration * 60 * 1000;
+        phase1Name = 'Тепло';
+        phase2Name = 'Холод';
+        displayName = 'Фортуна';
+    } else if (locationKey === 'Камбионский Дрейф') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.active_duration * 60 * 1000;
+        phase1Name = 'Фэз';
+        phase2Name = 'Воум';
+        displayName = 'Деймос';
+    } else {
+        return;
+    }
+    
+    const startDate = new Date('2021-01-01T00:00:00Z');
+    const startTime = startDate.getTime();
     
     const timeSinceStart = currentTime - startTime;
     const timeInCycle = timeSinceStart % cycleDuration;
-    const phase1Duration = cycle.phase1_duration * 60 * 1000;
     
     const isPhase1 = timeInCycle < phase1Duration;
     const timeUntilChange = isPhase1 
@@ -1140,12 +1125,12 @@ function checkSingleCycle(locationName, now) {
     const minutesUntilChange = Math.floor(timeUntilChange / 60000);
     
     [5, 2].forEach(threshold => {
-        const eventKey = `${locationName}_${threshold}_${Math.floor(currentTime / (60000 * threshold))}`;
+        const eventKey = `${locationKey}_${threshold}_${Math.floor(currentTime / (60000 * threshold))}`;
         
         if (minutesUntilChange === threshold && !checkedEvents.has(eventKey)) {
             checkedEvents.add(eventKey);
-            const nextPhase = isPhase1 ? cycle.phase2 : cycle.phase1;
-            const message = `⏰ *${locationName}*\n\n` +
+            const nextPhase = isPhase1 ? phase2Name : phase1Name;
+            const message = `⏰ *${displayName}*\n\n` +
                           `Через ${threshold} минут наступит: *${nextPhase}*`;
             sendToSubscribers(message);
             saveState();
@@ -1158,10 +1143,10 @@ function checkSingleCycle(locationName, now) {
 // ========================================================================
 
 console.log('='.repeat(60));
-console.log('🤖 WARFRAME BOT V3 COMPLETE');
+console.log('🤖 WARFRAME BOT V3 FINAL (LOCAL)');
 console.log('='.repeat(60));
 console.log('✓ Бот инициализирован');
-console.log('✓ Парсер worldState подключён');
+console.log('✓ Локальные расчёты циклов');
 console.log(`✓ Подписчики: ${subscribers.size}`);
 console.log('='.repeat(60));
 console.log('✓ 🚀 Бот запущен и готов к работе!');
