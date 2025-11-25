@@ -19,10 +19,18 @@ const weaponsSecondary = require('./weapons_secondary.json');
 const weaponsMelee = require('./weapons_melee.json');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const STATE_FILE = 'bot_state.json';
+// Отладочная информация о загруженном оружии
 console.log('✓ Загружено оружия:');
 console.log(`  Primary: ${Object.keys(weaponsPrimary).length}`);
-console.log(`  Secondary: ${Object.keys(weaponsSecondary).length}`);
+console.log(`  Secondary: ${Object.keys(weaponsSecondary).length}`); 
 console.log(`  Melee: ${Object.keys(weaponsMelee).length}`);
+
+// Показываем ключи первых нескольких оружий для проверки
+console.log('✓ Примеры ключей primary:', Object.keys(weaponsPrimary).slice(0, 5));
+console.log('✓ Примеры ключей secondary:', Object.keys(weaponsSecondary).slice(0, 5));
+console.log('✓ Примеры ключей melee:', Object.keys(weaponsMelee).slice(0, 5));
+
+
 bot.telegram.setChatMenuButton({
     menu_button: {
         type: 'commands'
@@ -31,17 +39,7 @@ bot.telegram.setChatMenuButton({
 
 // Регистрируем команды для меню
 bot.telegram.setMyCommands([
-    { command: 'start', description: '🏠 Главное меню' },
-    { command: 'baro', description: '💎 Baro Ki\'Teer' },
-    { command: 'sortie', description: '📋 Вылазка' },
-    { command: 'invasions', description: '⚔️ Вторжения' },
-    { command: 'time', description: '🌍 Циклы' },
-    { command: 'search', description: '🔍 Поиск варфрейма' },
-    { command: 'status', description: '📊 Статус' },
-    { command: 'subscribe', description: '🔔 Подписаться' },
-    { command: 'unsubscribe', description: '❌ Отписаться' }
-]).catch(err => console.log('Не удалось зарегистрировать команды:', err));
-
+    { command: 'start', description: '🏠 Главное меню' };
 // Проверка токена
 if (!process.env.BOT_TOKEN) {
     console.error('❌ Токен бота не найден!');
@@ -139,15 +137,21 @@ function getWeekWeapons(week) {
 function searchWeapon(query, weaponsDB, type) {
     const normalizedQuery = query.toLowerCase().trim();
     
-    // Ищем оружие
+    console.log(`🔍 Поиск: '${normalizedQuery}' в ${Object.keys(weaponsDB).length} оружиях`);
+    
+    // Ищем оружие по всем вариантам названий
     for (const [key, weapon] of Object.entries(weaponsDB)) {
-        if (weapon.name.toLowerCase().includes(normalizedQuery) ||
+        // Проверяем: английский ключ, основное название, все варианты
+        if (key.toLowerCase().includes(normalizedQuery) ||
+            weapon.name.toLowerCase().includes(normalizedQuery) ||
             weapon.variants.some(v => v.toLowerCase().includes(normalizedQuery))) {
             
+            console.log(`✅ Найдено: ${weapon.name} (ключ: ${key})`);
             return formatWeaponInfo(weapon, type);
         }
     }
     
+    console.log(`❌ Не найдено: ${normalizedQuery}`);
     return null;
 }
 
