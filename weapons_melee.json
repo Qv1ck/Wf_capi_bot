@@ -19,7 +19,7 @@
     ],
     "incarnon": {
       "available": true,
-      "week": 2
+      "week": 3
     }
   },
   "ceramic_dagger": {
@@ -29,7 +29,7 @@
     ],
     "incarnon": {
       "available": true,
-      "week": 3
+      "week": 4
     }
   },
   "dual_ichor": {
@@ -39,7 +39,7 @@
     ],
     "incarnon": {
       "available": true,
-      "week": 4
+      "week": 5
     }
   },
   "nami_solo": {
@@ -49,7 +49,7 @@
     ],
     "incarnon": {
       "available": true,
-      "week": 5
+      "week": 6
     }
   },
   "hate": {
@@ -59,7 +59,7 @@
     ],
     "incarnon": {
       "available": true,
-      "week": 6
+      "week": 7
     }
   },
   "despair": {
@@ -68,7 +68,7 @@
       "Отчаяние"
     ],
     "incarnon": {
-      "available": true,
+      "available": false,
       "week": 6
     }
   },
@@ -78,7 +78,7 @@
       "Страх"
     ],
     "incarnon": {
-      "available": true,
+      "available": false,
       "week": 6
     }
   },
@@ -479,7 +479,8 @@
       "Магистар"
     ],
     "incarnon": {
-      "available": false
+      "available": true,
+      "week": 4
     }
   },
   "sarpa": {
@@ -517,7 +518,7 @@
     ],
     "incarnon": {
       "available": true,
-      "week": 6
+      "week": 7
     }
   },
   "silva_aegis": {
