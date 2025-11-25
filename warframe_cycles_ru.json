@@ -4,26 +4,26 @@
     "day_duration": 100,
     "night_duration": 50,
     "notifications": [
-      10,
-      5
+      5,
+      2
     ]
   },
   "Фортуна": {
-    "cycle_minutes": 270,
-    "warm_duration": 200,
-    "cold_duration": 70,
+    "cycle_minutes": 24,
+    "warm_duration": 7,
+    "cold_duration": 20,
     "notifications": [
-      10,
-      5
+      5,
+      2
     ]
   },
   "Камбионский Дрейф": {
-    "cycle_minutes": 180,
-    "active_duration": 120,
-    "rest_duration": 60,
+    "cycle_minutes": 51,
+    "active_duration": 26,
+    "rest_duration": 25,
     "notifications": [
-      10,
-      5
+      5,
+      2
     ]
   },
   "Вылазка": {

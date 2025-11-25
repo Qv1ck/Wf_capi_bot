@@ -1042,7 +1042,7 @@ bot.command('status', async (ctx) => {
         if (!location) {
             message = `🕒 *Текущее время: ${now.toUTCString()}*\n\n`;
             message += earthCycle + '\n\n';
-            message += `⏰ *Уведомления приходят за:* 10 и 5 минут до смены цикла\n\n`;
+            message += `⏰ *Уведомления приходят за:* 5 и 2 мин. до смены цикла\n\n`;
             message += `📊 *Подписчиков:* ${subscribers.size}`;
         } else {
             // Здесь можно добавить обработку конкретных локаций
@@ -1139,7 +1139,7 @@ function checkSingleCycle(locationName, now) {
     
     const minutesUntilChange = Math.floor(timeUntilChange / 60000);
     
-    [10, 5].forEach(threshold => {
+    [5, 2].forEach(threshold => {
         const eventKey = `${locationName}_${threshold}_${Math.floor(currentTime / (60000 * threshold))}`;
         
         if (minutesUntilChange === threshold && !checkedEvents.has(eventKey)) {
