@@ -1,0 +1,167 @@
+{
+  "excalibur": {
+    "name": "Экскалибур",
+    "helminth": "Яростное Копьё",
+    "week": 1
+  },
+  "trinity": {
+    "name": "Тринити",
+    "helminth": "Вампирская Пиявка",
+    "week": 1
+  },
+  "ember": {
+    "name": "Эмбер",
+    "helminth": "Экзотермика",
+    "week": 1
+  },
+  "loki": {
+    "name": "Локи",
+    "helminth": "Тихая Невидимость",
+    "week": 2
+  },
+  "mag": {
+    "name": "Мэг",
+    "helminth": "Разрывающее Сокрушение",
+    "week": 2
+  },
+  "rhino": {
+    "name": "Рино",
+    "helminth": "Нерушимый Рывок",
+    "week": 2
+  },
+  "ash": {
+    "name": "Эш",
+    "helminth": "Ищущий Сюрикен",
+    "week": 3
+  },
+  "frost": {
+    "name": "Фрост",
+    "helminth": "Охлаждающая Сфера",
+    "week": 3
+  },
+  "nyx": {
+    "name": "Никс",
+    "helminth": "Ассимиляция",
+    "week": 3
+  },
+  "saryn": {
+    "name": "Сарина",
+    "helminth": "Доза Яда",
+    "week": 4
+  },
+  "vauban": {
+    "name": "Вобан",
+    "helminth": "Отталкивающая Бастилия",
+    "week": 4
+  },
+  "nova": {
+    "name": "Нова",
+    "helminth": "Молекулярное Деление",
+    "week": 4
+  },
+  "nekros": {
+    "name": "Некрос",
+    "helminth": "Щит Теней",
+    "week": 5
+  },
+  "valkyr": {
+    "name": "Валькирия",
+    "helminth": "Вечная Война",
+    "week": 5
+  },
+  "oberon": {
+    "name": "Оберон",
+    "helminth": "Возрождение Феникса",
+    "week": 5
+  },
+  "hydroid": {
+    "name": "Гидроид",
+    "helminth": "Вирусный Шторм",
+    "week": 6
+  },
+  "mirage": {
+    "name": "Мираж",
+    "helminth": "Полное Затмение",
+    "week": 6
+  },
+  "limbo": {
+    "name": "Лимбо",
+    "helminth": "Укрытие Бездной",
+    "week": 6
+  },
+  "mesa": {
+    "name": "Миса",
+    "helminth": "Вальс Мисы",
+    "week": 7
+  },
+  "chroma": {
+    "name": "Хрома",
+    "helminth": "Вечный Страж",
+    "week": 7
+  },
+  "atlas": {
+    "name": "Атлас",
+    "helminth": "Груда Булыжников",
+    "week": 7
+  },
+  "ivara": {
+    "name": "Ивара",
+    "helminth": "Проникновение",
+    "week": 8
+  },
+  "inaros": {
+    "name": "Инарос",
+    "helminth": "Инверсионная Броня",
+    "week": 8
+  },
+  "titania": {
+    "name": "Титания",
+    "helminth": "Блиц Бритвокрыла",
+    "week": 8
+  },
+  "nidus": {
+    "name": "Нидус",
+    "helminth": "Ненасытность",
+    "week": 9
+  },
+  "octavia": {
+    "name": "Октавия",
+    "helminth": "Дирижёр",
+    "week": 9
+  },
+  "harrow": {
+    "name": "Харроу",
+    "helminth": "Нерушимый Завет",
+    "week": 9
+  },
+  "gara": {
+    "name": "Гара",
+    "helminth": "Спектроисточник",
+    "week": 10
+  },
+  "khora": {
+    "name": "Кора",
+    "helminth": "Усиливающийся Когтехлыст",
+    "week": 10
+  },
+  "revenant": {
+    "name": "Ревенант",
+    "helminth": "Пакт Раба",
+    "week": 10
+  },
+  "garuda": {
+    "name": "Гаруда",
+    "helminth": "Измельчающие Когти",
+    "week": 11
+  },
+  "baruuk": {
+    "name": "Баруук",
+    "helminth": "Реактивный Шторм",
+    "week": 11
+  },
+  "hildryn": {
+    "name": "Хильдрин",
+    "helminth": "Пылающий Грабёж",
+    "week": 11
+  }
+}
