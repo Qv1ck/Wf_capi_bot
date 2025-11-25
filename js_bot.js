@@ -18,6 +18,10 @@ const {
 const weaponsPrimary = require('./weapons_primary.json');
 const weaponsSecondary = require('./weapons_secondary.json');
 const weaponsMelee = require('./weapons_melee.json');
+console.log('✓ Загружено оружия:');
+console.log(`  Primary: ${Object.keys(weaponsPrimary).length}`);
+console.log(`  Secondary: ${Object.keys(weaponsSecondary).length}`);
+console.log(`  Melee: ${Object.keys(weaponsMelee).length}`);
 
 // Проверка токена
 if (!process.env.BOT_TOKEN) {
