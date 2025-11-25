@@ -1,24 +1,23 @@
 // ========================================================================
-// 1. ИМПОРТЫ И КОНФИГУРАЦИЯ
+// 1. ИМПОРТЫ И КОНФИГУРАЦИЯ (CONST-БЛОК)
 // ========================================================================
 
 const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
-
-// Загрузка локальных баз данных
 const abilitiesDB = require('./warframe_abilities_ru.json');
 const dropLocationsDB = require('./warframe_drop_locations_ru.json');
 const cyclesDB = require('./warframe_cycles_ru.json');
 const syndicateBountiesDB = require('./warframe_syndicate_bounties_ru.json');
 const nameAliasesDB = require('./warframe_name_aliases_ru.json');
-
-// Импорт парсера для актуальных данных из API
 const { 
     getFormattedSortie, 
     getFormattedBaro, 
     getFormattedInvasions, 
     getFormattedCycles 
 } = require('./warframe_parser_v3');
+const weaponsPrimary = require('./weapons_primary.json');
+const weaponsSecondary = require('./weapons_secondary.json');
+const weaponsMelee = require('./weapons_melee.json');
 
 // Проверка токена
 if (!process.env.BOT_TOKEN) {
@@ -73,6 +72,188 @@ function loadState() {
     return { subscribers: [], checkedEvents: [] };
 }
 
+function getCurrentDuviriWeek() {
+    const startDate = new Date('2023-04-26T00:00:00Z'); // Начало Дувири
+    const now = new Date();
+    
+    const diffTime = now - startDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffWeeks = Math.floor(diffDays / 7);
+    
+    // Цикл 6 недель (недели 1-6)
+    const currentWeek = (diffWeeks % 6) + 1;
+    
+    return currentWeek;
+}
+
+/**
+ * Возвращает список оружия для указанной недели
+ */
+function getWeekWeapons(week) {
+    const weeklyRotation = {
+        1: ['Брэйтон', 'Лато', 'Скана', 'Парис', 'Кунай'],
+        2: ['Бо', 'Латрон', 'Фурис', 'Фуракс', 'Стран'],
+        3: ['Лекс', 'Магистр', 'Болтор', 'Бронко', 'Керамический кинжал'],
+        4: ['Торид', 'Двойные Токсоцисты', 'Двойные Ихоры', 'Митра', 'Атомос'],
+        5: ['Ак и Брант', 'Сома', 'Васто', 'Нами Соло', 'Берстон'],
+        6: ['Зайлок', 'Сибирь', 'Страх', 'Отчаяние', 'Ненависть']
+    };
+    
+    return weeklyRotation[week] || [];
+}
+
+// ========================================================================
+// ФУНКЦИЯ ПОИСКА ОРУЖИЯ
+// ========================================================================
+
+/**
+ * Поиск оружия в базе данных
+ * @param {string} query - Название оружия
+ * @param {object} weaponsDB - База данных оружия
+ * @param {string} type - Тип оружия (для вывода)
+ */
+function searchWeapon(query, weaponsDB, type) {
+    const normalizedQuery = query.toLowerCase().trim();
+    
+    // Ищем оружие
+    for (const [key, weapon] of Object.entries(weaponsDB)) {
+        if (weapon.name.toLowerCase().includes(normalizedQuery) ||
+            weapon.variants.some(v => v.toLowerCase().includes(normalizedQuery))) {
+            
+            return formatWeaponInfo(weapon, type);
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * Форматирование информации об оружии
+ */
+function formatWeaponInfo(weapon, type) {
+    const currentWeek = getCurrentDuviriWeek();
+    
+    let message = `🔫 *${type}*\n\n`;
+    
+    // Название и варианты
+    message += `*Найдено:* ${weapon.variants.join(' | ')}\n\n`;
+    
+    // Инкарнон
+    if (weapon.incarnon.available) {
+        const weaponWeek = weapon.incarnon.week;
+        const isCurrentWeek = weaponWeek === currentWeek;
+        
+        message += `⚡ *Инкарнон:* Доступен\n`;
+        message += `📅 *Неделя:* ${weaponWeek}\n`;
+        
+        if (isCurrentWeek) {
+            message += `✅ *Статус:* Доступен сейчас! (${currentWeek}-я неделя)\n`;
+        } else {
+            message += `⏰ *Статус:* Будет доступен на ${weaponWeek}-й неделе (сейчас ${currentWeek}-я)\n`;
+        }
+        
+        // Список оружия этой недели
+        const weekWeapons = getWeekWeapons(weaponWeek);
+        message += `\n*Оружие ${weaponWeek}-й недели:*\n`;
+        message += weekWeapons.join(', ');
+    } else {
+        message += `❌ *Инкарнон:* Недоступен`;
+    }
+    
+    return message;
+}
+
+// ========================================================================
+// КОМАНДЫ БОТА
+// ========================================================================
+
+// Основное оружие
+bot.command(['основное', 'primary', 'оружие'], async (ctx) => {
+    let query = ctx.message.text.split(' ').slice(1).join(' ').trim();
+    
+    if (!query) {
+        return ctx.reply(
+            'Использование: /основное <название>\n\n' +
+            'Примеры:\n' +
+            '/основное Болтор\n' +
+            '/основное Сома\n' +
+            '/основное Брэйтон'
+        );
+    }
+    
+    console.log(`✓ Поиск основного оружия: '${query}'`);
+    
+    const result = searchWeapon(query, weaponsPrimary, 'Основное оружие');
+    
+    if (result) {
+        await ctx.replyWithMarkdown(result);
+    } else {
+        await ctx.reply(`❌ Оружие "${query}" не найдено.\n\nПроверьте название и попробуйте снова.`);
+    }
+});
+
+// Вторичное оружие
+bot.command(['вторичное', 'secondary', 'писталет'], async (ctx) => {
+    let query = ctx.message.text.split(' ').slice(1).join(' ').trim();
+    
+    if (!query) {
+        return ctx.reply(
+            'Использование: /вторичное <название>\n\n' +
+            'Примеры:\n' +
+            '/вторичное Лекс\n' +
+            '/вторичное Атомос\n' +
+            '/вторичное Васто'
+        );
+    }
+    
+    console.log(`✓ Поиск вторичного оружия: '${query}'`);
+    
+    const result = searchWeapon(query, weaponsSecondary, 'Вторичное оружие');
+    
+    if (result) {
+        await ctx.replyWithMarkdown(result);
+    } else {
+        await ctx.reply(`❌ Оружие "${query}" не найдено.\n\nПроверьте название и попробуйте снова.`);
+    }
+});
+
+// Ближнее оружие
+bot.command(['ближнее', 'melee', 'мили'], async (ctx) => {
+    let query = ctx.message.text.split(' ').slice(1).join(' ').trim();
+    
+    if (!query) {
+        return ctx.reply(
+            'Использование: /ближнее <название>\n\n' +
+            'Примеры:\n' +
+            '/ближнее Скана\n' +
+            '/ближнее Никана\n' +
+            '/ближнее Грам'
+        );
+    }
+    
+    console.log(`✓ Поиск ближнего оружия: '${query}'`);
+    
+    const result = searchWeapon(query, weaponsMelee, 'Ближнее оружие');
+    
+    if (result) {
+        await ctx.replyWithMarkdown(result);
+    } else {
+        await ctx.reply(`❌ Оружие "${query}" не найдено.\n\nПроверьте название и попробуйте снова.`);
+    }
+});
+
+// Команда для просмотра текущей недели Дувири
+bot.command(['дувири', 'duviri', 'неделя'], async (ctx) => {
+    const currentWeek = getCurrentDuviriWeek();
+    const weekWeapons = getWeekWeapons(currentWeek);
+    
+    let message = `🌀 *ДУВИРИЙСКАЯ ЦЕПЬ*\n\n`;
+    message += `📅 *Текущая неделя:* ${currentWeek} из 6\n\n`;
+    message += `⚡ *Доступные Инкарноны:*\n`;
+    message += weekWeapons.join('\n');
+    
+    await ctx.replyWithMarkdown(message);
+});
 // ========================================================================
 // 4. КОМАНДЫ БОТА
 // ========================================================================

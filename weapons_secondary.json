@@ -1,0 +1,184 @@
+{
+  "lato": {
+    "name": "Лато",
+    "variants": ["Лато", "Лато Прайм", "Лато Вандал"],
+    "incarnon": {
+      "available": true,
+      "week": 1
+    }
+  },
+  "kunai": {
+    "name": "Кунай",
+    "variants": ["Кунай", "МК1-Кунай"],
+    "incarnon": {
+      "available": true,
+      "week": 1
+    }
+  },
+  "furis": {
+    "name": "Фурис",
+    "variants": ["Фурис", "МК1-Фурис"],
+    "incarnon": {
+      "available": true,
+      "week": 2
+    }
+  },
+  "furakx": {
+    "name": "Фуракс",
+    "variants": ["Фуракс", "Фуракс Рэйт"],
+    "incarnon": {
+      "available": true,
+      "week": 2
+    }
+  },
+  "lex": {
+    "name": "Лекс",
+    "variants": ["Лекс", "Лекс Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 3
+    }
+  },
+  "magistar": {
+    "name": "Магистр",
+    "variants": ["Магистр"],
+    "incarnon": {
+      "available": true,
+      "week": 3
+    }
+  },
+  "bronco": {
+    "name": "Бронко",
+    "variants": ["Бронко", "Бронко Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 3
+    }
+  },
+  "dual_toxocyst": {
+    "name": "Двойные Токсоцисты",
+    "variants": ["Двойные Токсоцисты"],
+    "incarnon": {
+      "available": true,
+      "week": 4
+    }
+  },
+  "atomos": {
+    "name": "Атомос",
+    "variants": ["Атомос", "Тенет Атомос"],
+    "incarnon": {
+      "available": true,
+      "week": 4
+    }
+  },
+  "akbronco": {
+    "name": "Ак и Брант",
+    "variants": ["Ак и Брант", "Ак и Брант Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 5
+    }
+  },
+  "vasto": {
+    "name": "Васто",
+    "variants": ["Васто", "Васто Прайм", "Ак-Васто", "Ак-Васто Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 5
+    }
+  },
+  "despair": {
+    "name": "Отчаяние",
+    "variants": ["Отчаяние"],
+    "incarnon": {
+      "available": true,
+      "week": 6
+    }
+  },
+  "dread": {
+    "name": "Страх",
+    "variants": ["Страх"],
+    "incarnon": {
+      "available": true,
+      "week": 6
+    }
+  },
+  "hate": {
+    "name": "Ненависть",
+    "variants": ["Ненависть"],
+    "incarnon": {
+      "available": true,
+      "week": 6
+    }
+  },
+  "sicarus": {
+    "name": "Сикарус",
+    "variants": ["Сикарус", "Сикарус Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "akstiletto": {
+    "name": "Ак-Стилетто",
+    "variants": ["Ак-Стилетто", "Ак-Стилетто Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "euphona_prime": {
+    "name": "Эуфона Прайм",
+    "variants": ["Эуфона Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "pyrana": {
+    "name": "Пирана",
+    "variants": ["Пирана", "Пирана Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "catchmoon": {
+    "name": "Кэтчмун",
+    "variants": ["Кэтчмун"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "sporelacer": {
+    "name": "Спорлейсер",
+    "variants": ["Спорлейсер"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "epitaph": {
+    "name": "Эпитаф",
+    "variants": ["Эпитаф"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "tenet_cycron": {
+    "name": "Тенет Циклон",
+    "variants": ["Тенет Циклон"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "laetum": {
+    "name": "Летум",
+    "variants": ["Летум"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "zymos": {
+    "name": "Зимос",
+    "variants": ["Зимос"],
+    "incarnon": {
+      "available": false
+    }
+  }
+}

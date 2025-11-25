@@ -1,0 +1,195 @@
+{
+  "braton": {
+    "name": "Брэйтон",
+    "variants": ["Брэйтон", "Брэйтон Прайм", "Брэйтон Вандал", "МК1-Брэйтон"],
+    "incarnon": {
+      "available": true,
+      "week": 1
+    }
+  },
+  "paris": {
+    "name": "Парис",
+    "variants": ["Парис", "Парис Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 1
+    }
+  },
+  "strun": {
+    "name": "Стран",
+    "variants": ["Стран", "Стран Прайм", "Стран Рэйт"],
+    "incarnon": {
+      "available": true,
+      "week": 2
+    }
+  },
+  "latron": {
+    "name": "Латрон",
+    "variants": ["Латрон", "Латрон Прайм", "Латрон Рэйт"],
+    "incarnon": {
+      "available": true,
+      "week": 2
+    }
+  },
+  "boar": {
+    "name": "Кабан",
+    "variants": ["Кабан", "Кабан Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "boltor": {
+    "name": "Болтор",
+    "variants": ["Болтор", "Болтор Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 3
+    }
+  },
+  "torid": {
+    "name": "Торид",
+    "variants": ["Торид"],
+    "incarnon": {
+      "available": true,
+      "week": 4
+    }
+  },
+  "miter": {
+    "name": "Митра",
+    "variants": ["Митра"],
+    "incarnon": {
+      "available": true,
+      "week": 4
+    }
+  },
+  "soma": {
+    "name": "Сома",
+    "variants": ["Сома", "Сома Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 5
+    }
+  },
+  "burston": {
+    "name": "Берстон",
+    "variants": ["Берстон", "Берстон Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 5
+    }
+  },
+  "zylock": {
+    "name": "Зайлок",
+    "variants": ["Зайлок"],
+    "incarnon": {
+      "available": true,
+      "week": 6
+    }
+  },
+  "sibear": {
+    "name": "Сибирь",
+    "variants": ["Сибирь"],
+    "incarnon": {
+      "available": true,
+      "week": 6
+    }
+  },
+  "tigris": {
+    "name": "Тигрис",
+    "variants": ["Тигрис", "Тигрис Прайм", "Санкти Тигрис"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "hek": {
+    "name": "Хек",
+    "variants": ["Хек", "Вейлор Хек"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "opticor": {
+    "name": "Оптикор",
+    "variants": ["Оптикор", "Оптикор Вандал"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "ignis": {
+    "name": "Игнис",
+    "variants": ["Игнис", "Игнис Рэйт"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "rubico": {
+    "name": "Рубико",
+    "variants": ["Рубико", "Рубико Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "acceltra": {
+    "name": "Акцельтра",
+    "variants": ["Акцельтра"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "phage": {
+    "name": "Фаг",
+    "variants": ["Фаг"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "arca_plasmor": {
+    "name": "Арка Плазмор",
+    "variants": ["Арка Плазмор", "Тенет Арка Плазмор"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "zarr": {
+    "name": "Зарр",
+    "variants": ["Зарр", "Кува Зарр"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "nataruk": {
+    "name": "Натарук",
+    "variants": ["Натарук"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "corinth": {
+    "name": "Коринф",
+    "variants": ["Коринф", "Коринф Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "fulmin": {
+    "name": "Фулмин",
+    "variants": ["Фулмин", "Фулмин Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "trumna": {
+    "name": "Трумна",
+    "variants": ["Трумна"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "stahlta": {
+    "name": "Штальта",
+    "variants": ["Штальта"],
+    "incarnon": {
+      "available": false
+    }
+  }
+}

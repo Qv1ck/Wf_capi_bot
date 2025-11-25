@@ -1,0 +1,185 @@
+{
+  "skana": {
+    "name": "Скана",
+    "variants": ["Скана", "Скана Прайм", "Призма Скана"],
+    "incarnon": {
+      "available": true,
+      "week": 1
+    }
+  },
+  "bo": {
+    "name": "Бо",
+    "variants": ["Бо", "Бо Прайм"],
+    "incarnon": {
+      "available": true,
+      "week": 2
+    }
+  },
+  "ceramic_dagger": {
+    "name": "Керамический кинжал",
+    "variants": ["Керамический кинжал"],
+    "incarnon": {
+      "available": true,
+      "week": 3
+    }
+  },
+  "dual_ichor": {
+    "name": "Двойные Ихоры",
+    "variants": ["Двойные Ихоры"],
+    "incarnon": {
+      "available": true,
+      "week": 4
+    }
+  },
+  "nami_solo": {
+    "name": "Нами Соло",
+    "variants": ["Нами Соло"],
+    "incarnon": {
+      "available": true,
+      "week": 5
+    }
+  },
+  "hate": {
+    "name": "Ненависть",
+    "variants": ["Ненависть"],
+    "incarnon": {
+      "available": true,
+      "week": 6
+    }
+  },
+  "despair": {
+    "name": "Отчаяние",
+    "variants": ["Отчаяние"],
+    "incarnon": {
+      "available": true,
+      "week": 6
+    }
+  },
+  "dread": {
+    "name": "Страх",
+    "variants": ["Страх"],
+    "incarnon": {
+      "available": true,
+      "week": 6
+    }
+  },
+  "galatine": {
+    "name": "Галатин",
+    "variants": ["Галатин", "Галатин Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "gram": {
+    "name": "Грам",
+    "variants": ["Грам", "Грам Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "orthos": {
+    "name": "Орфос",
+    "variants": ["Орфос", "Орфос Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "nikana": {
+    "name": "Никана",
+    "variants": ["Никана", "Никана Прайм", "Драконья Никана"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "reaper_prime": {
+    "name": "Жнец Прайм",
+    "variants": ["Жнец Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "lesion": {
+    "name": "Лезион",
+    "variants": ["Лезион"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "plague_kripath": {
+    "name": "Чумной Крипаф",
+    "variants": ["Чумной Крипаф"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "kronen_prime": {
+    "name": "Кронен Прайм",
+    "variants": ["Кронен Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "glaive_prime": {
+    "name": "Глефа Прайм",
+    "variants": ["Глефа Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "stropha": {
+    "name": "Строфа",
+    "variants": ["Строфа"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "pennant": {
+    "name": "Пеннант",
+    "variants": ["Пеннант"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "silva_aegis_prime": {
+    "name": "Сильва и Эгида Прайм",
+    "variants": ["Сильва и Эгида Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "guandao_prime": {
+    "name": "Гуандао Прайм",
+    "variants": ["Гуандао Прайм"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "vitrica": {
+    "name": "Витрика",
+    "variants": ["Витрика"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "tenet_exec": {
+    "name": "Тенет Экзек",
+    "variants": ["Тенет Экзек"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "praedos": {
+    "name": "Предос",
+    "variants": ["Предос"],
+    "incarnon": {
+      "available": false
+    }
+  },
+  "innodem": {
+    "name": "Иннодем",
+    "variants": ["Иннодем"],
+    "incarnon": {
+      "available": false
+    }
+  }
+}
