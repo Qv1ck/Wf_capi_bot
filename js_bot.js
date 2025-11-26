@@ -129,7 +129,7 @@ function getCurrentDuviriWeek() {
     const diffWeeks = Math.floor(diffDays / 7);
     
     let currentWeek = WEAPON_KNOWN_WEEK + diffWeeks;
-    currentWeek = ((currentWeek - 1) % 6) + 1;
+    currentWeek = ((currentWeek - 1) % 8) + 1;
     
     return currentWeek;
 }
