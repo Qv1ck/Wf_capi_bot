@@ -102,45 +102,36 @@ function loadState() {
 // ФУНКЦИИ РАСЧЁТА НЕДЕЛЬ ДУВИРИ
 // ========================================================================
 
-function getCurrentDuviriWeek() {
-    const startDate = new Date('2023-05-30T00:00:00Z');
-    const now = new Date();
-    
-    const diffTime = now - startDate;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffWeeks = Math.floor(diffDays / 7);
-    
-    const currentWeek = (diffWeeks % 8) + 1;
-    
-    return currentWeek;
-}
+// ИЗВЕСТНЫЕ ТОЧКИ
+const WARFRAME_KNOWN_DATE = new Date('2025-11-24T00:00:00Z');
+const WARFRAME_KNOWN_WEEK = 3;
 
+const WEAPON_KNOWN_DATE = new Date('2025-11-24T00:00:00Z');
+const WEAPON_KNOWN_WEEK = 3; // Проверь в игре!
+
+// ФУНКЦИИ
 function getCurrentDuviriWarframeWeek() {
-    const startDate = new Date('2023-04-26T00:00:00Z');
     const now = new Date();
-    
-    const diffTime = now - startDate;
+    const diffTime = now - WARFRAME_KNOWN_DATE;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const diffWeeks = Math.floor(diffDays / 7);
     
-    const currentWeek = (diffWeeks % 11) + 1;
+    let currentWeek = WARFRAME_KNOWN_WEEK + diffWeeks;
+    currentWeek = ((currentWeek - 1) % 11) + 1;
     
     return currentWeek;
 }
 
-function getWeekWeapons(week) {
-    const weeklyRotation = {
-        1: ['Брэйтон', 'Лато', 'Скана', 'Парис', 'Кунай'],
-        2: ['Боар', 'Гаммакор', 'Ангструм', 'Горгон', 'Анку'],
-        3: ['Бо', 'Латрон', 'Фурис', 'Фуракс', 'Стран'],
-        4: ['Лекс', 'Магистр', 'Болтор', 'Бронко', 'Керамический Кинжал'],
-        5: ['Торид', 'Двойные Токсоцисты', 'Двойные Ихоры', 'Митра', 'Атомос'],
-        6: ['Ак и Брант', 'Сома', 'Васто', 'Нами Соло', 'Берстон'],
-        7: ['Зайлок', 'Сибирь', 'Страх', 'Отчаяние', 'Ненависть'],
-        8: ['Дера', 'Сибарис', 'Цестра', 'Сикарус', 'Окина']
-    };
+function getCurrentDuviriWeek() {
+    const now = new Date();
+    const diffTime = now - WEAPON_KNOWN_DATE;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffWeeks = Math.floor(diffDays / 7);
     
-    return weeklyRotation[week] || [];
+    let currentWeek = WEAPON_KNOWN_WEEK + diffWeeks;
+    currentWeek = ((currentWeek - 1) % 6) + 1;
+    
+    return currentWeek;
 }
 
 // ========================================================================
