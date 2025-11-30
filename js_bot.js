@@ -365,6 +365,13 @@ const FORTUNA_WARM_DURATION = 6 + 40/60;   // 6 минут 40 секунд
 const FORTUNA_COLD_DURATION = 13 + 20/60;  // 13 минут 20 секунд
 const FORTUNA_CYCLE_DURATION = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION; // 20 минут
 
+// ДЕЙМОС: в 20:50 по Москве (17:50 UTC) 30.11.2025 закончится ФЭЗ, начнётся ВОУМ
+const DEIMOS_KNOWN_DATE = new Date('2025-11-30T17:50:00Z');
+const DEIMOS_KNOWN_PHASE = 'vome'; // что начинается после этого времени
+const DEIMOS_FASS_DURATION = 150;  // 150 минут Фэз
+const DEIMOS_VOME_DURATION = 50;   // 50 минут Воум
+const DEIMOS_CYCLE_DURATION = DEIMOS_FASS_DURATION + DEIMOS_VOME_DURATION; // 200 минут
+
 // ========================================================================
 // ФУНКЦИЯ РАСЧЁТА ЦИКЛОВ
 // ========================================================================
@@ -428,38 +435,37 @@ function getCycleStatus(locationKey) {
         };
     }
     
-    // ДЛЯ ОСТАЛЬНЫХ ЛОКАЦИЙ (Деймос, Земля и т.д.) - используем старый метод
-    const location = cyclesDB[locationKey];
-    if (!location) return null;
-    
-    const now = Date.now();
-    
-    let cycleDuration, phase1Duration, phase1Name, phase2Name;
-    
-    if (locationKey === 'Камбионский Дрейф') {
-        cycleDuration = location.cycle_minutes * 60 * 1000;
-        phase1Duration = location.active_duration * 60 * 1000;
-        phase1Name = 'Фэз';
-        phase2Name = 'Воум';
-    } else {
-        return null;
+    // ДЕЙМОС (Камбионский Дрейф)
+    if (locationKey === 'Камбионский Дрейф' || locationKey === 'Деймос') {
+        const now = new Date();
+        const diffTime = now - DEIMOS_KNOWN_DATE;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        
+        const minutesInCycle = ((diffMinutes % DEIMOS_CYCLE_DURATION) + DEIMOS_CYCLE_DURATION) % DEIMOS_CYCLE_DURATION;
+        
+        let isFass, timeLeftMinutes;
+        
+        if (DEIMOS_KNOWN_PHASE === 'vome') {
+            if (minutesInCycle < DEIMOS_VOME_DURATION) {
+                // Сейчас ВОУМ
+                isFass = false;
+                timeLeftMinutes = DEIMOS_VOME_DURATION - minutesInCycle;
+            } else {
+                // Сейчас ФЭЗ
+                isFass = true;
+                timeLeftMinutes = DEIMOS_CYCLE_DURATION - minutesInCycle;
+            }
+        }
+        
+        return {
+            phase: isFass ? 'Фэз' : 'Воум',
+            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            isPhase1: isFass
+        };
     }
     
-    const startDate = new Date('2021-01-01T00:00:00Z').getTime();
-    const timeSinceStart = now - startDate;
-    const timeInCycle = timeSinceStart % cycleDuration;
-    
-    const isPhase1 = timeInCycle < phase1Duration;
-    const currentPhase = isPhase1 ? phase1Name : phase2Name;
-    const timeUntilChange = isPhase1 
-        ? phase1Duration - timeInCycle 
-        : cycleDuration - timeInCycle;
-    
-    return {
-        phase: currentPhase,
-        timeLeft: formatTime(timeUntilChange),
-        isPhase1
-    };
+    // ДЛЯ ОСТАЛЬНЫХ ЛОКАЦИЙ - возвращаем null
+    return null;
 }
 
 function formatTime(milliseconds) {
