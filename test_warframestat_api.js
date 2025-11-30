@@ -23,9 +23,16 @@ function fetchAPI(endpoint) {
             
             res.on('end', () => {
                 try {
+                    console.log('\n📄 Первые 200 символов ответа:');
+                    console.log(data.substring(0, 200));
+                    console.log('\n');
+                    
                     const json = JSON.parse(data);
                     resolve(json);
                 } catch (e) {
+                    console.log('\n❌ Не удалось распарсить JSON!');
+                    console.log('Полный ответ:');
+                    console.log(data);
                     reject(e);
                 }
             });
