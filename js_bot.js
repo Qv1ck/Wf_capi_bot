@@ -347,26 +347,96 @@ function getEarthCycle() {
     };
 }
 
+// ========================================================================
+// ИЗВЕСТНЫЕ ТОЧКИ ОТСЧЁТА ДЛЯ ЦИКЛОВ (обновлено 30.11.2025)
+// ========================================================================
+
+// ЦЕТУС: в 20:51 по Москве (17:51 UTC) 30.11.2025 закончится ДЕНЬ, начнётся НОЧЬ
+const CETUS_KNOWN_DATE = new Date('2025-11-30T17:51:00Z');
+const CETUS_KNOWN_PHASE = 'night'; // что начинается после этого времени
+const CETUS_DAY_DURATION = 100;    // 100 минут день
+const CETUS_NIGHT_DURATION = 50;   // 50 минут ночь
+const CETUS_CYCLE_DURATION = CETUS_DAY_DURATION + CETUS_NIGHT_DURATION; // 150 минут
+
+// ФОРТУНА: в 19:39 по Москве (16:39 UTC) 30.11.2025 закончится ХОЛОД, начнётся ТЕПЛО
+const FORTUNA_KNOWN_DATE = new Date('2025-11-30T16:39:00Z');
+const FORTUNA_KNOWN_PHASE = 'warm'; // что начинается после этого времени
+const FORTUNA_WARM_DURATION = 6 + 40/60;   // 6 минут 40 секунд
+const FORTUNA_COLD_DURATION = 13 + 20/60;  // 13 минут 20 секунд
+const FORTUNA_CYCLE_DURATION = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION; // 20 минут
+
+// ========================================================================
+// ФУНКЦИЯ РАСЧЁТА ЦИКЛОВ
+// ========================================================================
+
 function getCycleStatus(locationKey) {
+    // ЦЕТУС (Равнины Эйдолона)
+    if (locationKey === 'Равнины Эйдолона' || locationKey === 'Цетус') {
+        const now = new Date();
+        const diffTime = now - CETUS_KNOWN_DATE;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        
+        const minutesInCycle = ((diffMinutes % CETUS_CYCLE_DURATION) + CETUS_CYCLE_DURATION) % CETUS_CYCLE_DURATION;
+        
+        let isDay, timeLeftMinutes;
+        
+        if (CETUS_KNOWN_PHASE === 'night') {
+            if (minutesInCycle < CETUS_NIGHT_DURATION) {
+                // Сейчас НОЧЬ
+                isDay = false;
+                timeLeftMinutes = CETUS_NIGHT_DURATION - minutesInCycle;
+            } else {
+                // Сейчас ДЕНЬ
+                isDay = true;
+                timeLeftMinutes = CETUS_CYCLE_DURATION - minutesInCycle;
+            }
+        }
+        
+        return {
+            phase: isDay ? 'День' : 'Ночь',
+            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            isPhase1: isDay
+        };
+    }
+    
+    // ФОРТУНА
+    if (locationKey === 'Фортуна') {
+        const now = new Date();
+        const diffTime = now - FORTUNA_KNOWN_DATE;
+        const diffMinutes = diffTime / (1000 * 60); // с дробной частью!
+        
+        const minutesInCycle = ((diffMinutes % FORTUNA_CYCLE_DURATION) + FORTUNA_CYCLE_DURATION) % FORTUNA_CYCLE_DURATION;
+        
+        let isWarm, timeLeftMinutes;
+        
+        if (FORTUNA_KNOWN_PHASE === 'warm') {
+            if (minutesInCycle < FORTUNA_WARM_DURATION) {
+                // Сейчас ТЕПЛО
+                isWarm = true;
+                timeLeftMinutes = FORTUNA_WARM_DURATION - minutesInCycle;
+            } else {
+                // Сейчас ХОЛОД
+                isWarm = false;
+                timeLeftMinutes = FORTUNA_CYCLE_DURATION - minutesInCycle;
+            }
+        }
+        
+        return {
+            phase: isWarm ? 'Тепло' : 'Холод',
+            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            isPhase1: isWarm
+        };
+    }
+    
+    // ДЛЯ ОСТАЛЬНЫХ ЛОКАЦИЙ (Деймос, Земля и т.д.) - используем старый метод
     const location = cyclesDB[locationKey];
     if (!location) return null;
     
     const now = Date.now();
     
-    // Определяем параметры цикла
     let cycleDuration, phase1Duration, phase1Name, phase2Name;
     
-    if (locationKey === 'Равнины Эйдолона') {
-        cycleDuration = location.cycle_minutes * 60 * 1000;
-        phase1Duration = location.day_duration * 60 * 1000;
-        phase1Name = 'День';
-        phase2Name = 'Ночь';
-    } else if (locationKey === 'Фортуна') {
-        cycleDuration = location.cycle_minutes * 60 * 1000;
-        phase1Duration = location.warm_duration * 60 * 1000;
-        phase1Name = 'Тепло';
-        phase2Name = 'Холод';
-    } else if (locationKey === 'Камбионский Дрейф') {
+    if (locationKey === 'Камбионский Дрейф') {
         cycleDuration = location.cycle_minutes * 60 * 1000;
         phase1Duration = location.active_duration * 60 * 1000;
         phase1Name = 'Фэз';
