@@ -365,12 +365,20 @@ const FORTUNA_WARM_DURATION = 6 + 40/60;   // 6 минут 40 секунд
 const FORTUNA_COLD_DURATION = 13 + 20/60;  // 13 минут 20 секунд
 const FORTUNA_CYCLE_DURATION = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION; // 20 минут
 
-// ДЕЙМОС: в 20:50 по Москве (17:50 UTC) 30.11.2025 закончится ФЭЗ, начнётся ВОУМ
-const DEIMOS_KNOWN_DATE = new Date('2025-11-30T17:50:00Z');
+// ДЕЙМОС: в 07:51 по Москве (04:51 UTC) 02.12.2025 закончится ФЭЗ, начнётся ВОУМ
+const DEIMOS_KNOWN_DATE = new Date('2025-12-02T04:51:00Z');
 const DEIMOS_KNOWN_PHASE = 'vome'; // что начинается после этого времени
 const DEIMOS_FASS_DURATION = 150;  // 150 минут Фэз
 const DEIMOS_VOME_DURATION = 50;   // 50 минут Воум
 const DEIMOS_CYCLE_DURATION = DEIMOS_FASS_DURATION + DEIMOS_VOME_DURATION; // 200 минут
+
+// ЗЕМЛЯ: день 4 часа, ночь 4 часа = 8 часов цикл
+// Сейчас ДЕНЬ, смена через 21м 58с = в 07:01 Москва (04:01 UTC)
+const EARTH_KNOWN_DATE = new Date('2025-12-02T04:01:00Z');
+const EARTH_KNOWN_PHASE = 'night'; // что начинается после этого времени
+const EARTH_DAY_DURATION = 240;    // 4 часа = 240 минут день
+const EARTH_NIGHT_DURATION = 240;  // 4 часа = 240 минут ночь
+const EARTH_CYCLE_DURATION = EARTH_DAY_DURATION + EARTH_NIGHT_DURATION; // 480 минут
 
 // ========================================================================
 // ФУНКЦИЯ РАСЧЁТА ЦИКЛОВ
@@ -461,6 +469,35 @@ function getCycleStatus(locationKey) {
             phase: isFass ? 'Фэз' : 'Воум',
             timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
             isPhase1: isFass
+        };
+    }
+    
+    // ЗЕМЛЯ
+    if (locationKey === 'Земля') {
+        const now = new Date();
+        const diffTime = now - EARTH_KNOWN_DATE;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        
+        const minutesInCycle = ((diffMinutes % EARTH_CYCLE_DURATION) + EARTH_CYCLE_DURATION) % EARTH_CYCLE_DURATION;
+        
+        let isDay, timeLeftMinutes;
+        
+        if (EARTH_KNOWN_PHASE === 'night') {
+            if (minutesInCycle < EARTH_NIGHT_DURATION) {
+                // Сейчас НОЧЬ
+                isDay = false;
+                timeLeftMinutes = EARTH_NIGHT_DURATION - minutesInCycle;
+            } else {
+                // Сейчас ДЕНЬ
+                isDay = true;
+                timeLeftMinutes = EARTH_CYCLE_DURATION - minutesInCycle;
+            }
+        }
+        
+        return {
+            phase: isDay ? 'День' : 'Ночь',
+            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            isPhase1: isDay
         };
     }
     
