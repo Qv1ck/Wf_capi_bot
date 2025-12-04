@@ -372,148 +372,126 @@ function getEarthCycle() {
 }
 
 // ========================================================================
-// ИДЕАЛЬНЫЙ РАСЧЁТ ЦИКЛОВ - ТОЧНОЕ РАСПИСАНИЕ
+// РАСЧЁТ ЦИКЛОВ ОТ ИЗВЕСТНЫХ ТОЧЕК (обновлено 02.12.2025 20:24 МСК)
 // ========================================================================
-// Вместо "известная точка + математика" используем точное расписание на сутки
-// Циклы привязаны к UTC времени и повторяются каждые 24 часа
+
+// Известные точки (проверено в игре 02.12.2025 в 20:24 МСК = 17:24 UTC):
+// - Деймос: Воум, смена через 16м → закончится в 17:40 UTC
+// - Цетус: Ночь, смена через 16м → закончится в 17:40 UTC  
+// - Фортуна: Холод, смена через 9м → закончится в 17:33 UTC
+
+const DEIMOS_REFERENCE = new Date('2025-12-02T17:40:00Z'); // конец Воум
+const DEIMOS_FASS_DURATION = 150 * 60 * 1000;  // 150 минут
+const DEIMOS_VOME_DURATION = 50 * 60 * 1000;   // 50 минут
+const DEIMOS_CYCLE = DEIMOS_FASS_DURATION + DEIMOS_VOME_DURATION;
+
+const CETUS_REFERENCE = new Date('2025-12-02T17:40:00Z'); // конец Ночь
+const CETUS_DAY_DURATION = 100 * 60 * 1000;  // 100 минут
+const CETUS_NIGHT_DURATION = 50 * 60 * 1000; // 50 минут
+const CETUS_CYCLE = CETUS_DAY_DURATION + CETUS_NIGHT_DURATION;
+
+const FORTUNA_REFERENCE = new Date('2025-12-02T17:33:00Z'); // конец Холод
+const FORTUNA_WARM_DURATION = 400 * 1000;  // 400 секунд (6м 40с)
+const FORTUNA_COLD_DURATION = 800 * 1000;  // 800 секунд (13м 20с)
+const FORTUNA_CYCLE = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION;
+
+const EARTH_DAY_DURATION = 240 * 60 * 1000;  // 240 минут
+const EARTH_NIGHT_DURATION = 240 * 60 * 1000; // 240 минут
+const EARTH_CYCLE = EARTH_DAY_DURATION + EARTH_NIGHT_DURATION;
+const EARTH_REFERENCE = new Date('2025-12-02T20:00:00Z'); // начало ночи (примерно)
 
 function getCycleStatus(locationKey) {
-    // ЦЕТУС (Равнины Эйдолона)
-    if (locationKey === 'Равнины Эйдолона' || locationKey === 'Цетус') {
-        const now = new Date();
-        const hours = now.getUTCHours();
-        const minutes = now.getUTCMinutes();
-        const totalMinutes = hours * 60 + minutes;
-        
-        // Цикл 150 минут (100м день + 50м ночь)
-        const schedule = [
-            { start: 0, end: 100, phase: 'День' },
-            { start: 100, end: 150, phase: 'Ночь' },
-            { start: 150, end: 250, phase: 'День' },
-            { start: 250, end: 300, phase: 'Ночь' },
-            { start: 300, end: 400, phase: 'День' },
-            { start: 400, end: 450, phase: 'Ночь' },
-            { start: 450, end: 550, phase: 'День' },
-            { start: 550, end: 600, phase: 'Ночь' },
-            { start: 600, end: 700, phase: 'День' },
-            { start: 700, end: 750, phase: 'Ночь' },
-            { start: 750, end: 850, phase: 'День' },
-            { start: 850, end: 900, phase: 'Ночь' },
-            { start: 900, end: 1000, phase: 'День' },
-            { start: 1000, end: 1050, phase: 'Ночь' },
-            { start: 1050, end: 1150, phase: 'День' },
-            { start: 1150, end: 1200, phase: 'Ночь' },
-            { start: 1200, end: 1300, phase: 'День' },
-            { start: 1300, end: 1350, phase: 'Ночь' },
-            { start: 1350, end: 1440, phase: 'День' },
-        ];
-        
-        for (let slot of schedule) {
-            if (totalMinutes >= slot.start && totalMinutes < slot.end) {
-                const timeLeft = slot.end - totalMinutes;
-                return {
-                    phase: slot.phase,
-                    timeLeft: formatTime(timeLeft * 60 * 1000),
-                    isPhase1: slot.phase === 'День'
-                };
-            }
-        }
-    }
+    const now = Date.now();
     
-    // ФОРТУНА
-    if (locationKey === 'Фортуна') {
-        const now = new Date();
-        const hours = now.getUTCHours();
-        const minutes = now.getUTCMinutes();
-        const seconds = now.getUTCSeconds();
-        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    // ЦЕТУС
+    if (locationKey === 'Равнины Эйдолона' || locationKey === 'Цетус') {
+        const elapsed = now - CETUS_REFERENCE.getTime();
+        const cyclePosition = ((elapsed % CETUS_CYCLE) + CETUS_CYCLE) % CETUS_CYCLE;
         
-        // Цикл 20 минут = 1200 секунд (400с тепло + 800с холод)
-        const cycleSeconds = totalSeconds % 1200;
-        
-        if (cycleSeconds < 400) {
-            // ТЕПЛО (6м 40с)
-            const timeLeftSeconds = 400 - cycleSeconds;
+        // После reference начинается День
+        if (cyclePosition < CETUS_DAY_DURATION) {
+            // День
             return {
-                phase: 'Тепло',
-                timeLeft: formatTime(timeLeftSeconds * 1000),
+                phase: 'День',
+                timeLeft: formatTime(CETUS_DAY_DURATION - cyclePosition),
                 isPhase1: true
             };
         } else {
-            // ХОЛОД (13м 20с)
-            const timeLeftSeconds = 1200 - cycleSeconds;
+            // Ночь
             return {
-                phase: 'Холод',
-                timeLeft: formatTime(timeLeftSeconds * 1000),
+                phase: 'Ночь',
+                timeLeft: formatTime(CETUS_CYCLE - cyclePosition),
                 isPhase1: false
             };
         }
     }
     
-    // ДЕЙМОС (Камбионский Дрейф)
+    // ФОРТУНА
+    if (locationKey === 'Фортуна') {
+        const elapsed = now - FORTUNA_REFERENCE.getTime();
+        const cyclePosition = ((elapsed % FORTUNA_CYCLE) + FORTUNA_CYCLE) % FORTUNA_CYCLE;
+        
+        // После reference начинается Тепло
+        if (cyclePosition < FORTUNA_WARM_DURATION) {
+            // Тепло
+            return {
+                phase: 'Тепло',
+                timeLeft: formatTime(FORTUNA_WARM_DURATION - cyclePosition),
+                isPhase1: true
+            };
+        } else {
+            // Холод
+            return {
+                phase: 'Холод',
+                timeLeft: formatTime(FORTUNA_CYCLE - cyclePosition),
+                isPhase1: false
+            };
+        }
+    }
+    
+    // ДЕЙМОС
     if (locationKey === 'Камбионский Дрейф' || locationKey === 'Деймос') {
-        const now = new Date();
-        const hours = now.getUTCHours();
-        const minutes = now.getUTCMinutes();
-        const totalMinutes = hours * 60 + minutes;
+        const elapsed = now - DEIMOS_REFERENCE.getTime();
+        const cyclePosition = ((elapsed % DEIMOS_CYCLE) + DEIMOS_CYCLE) % DEIMOS_CYCLE;
         
-        // Цикл 200 минут (150м Фэз + 50м Воум)
-        const schedule = [
-            { start: 0, end: 150, phase: 'Фэз' },
-            { start: 150, end: 200, phase: 'Воум' },
-            { start: 200, end: 350, phase: 'Фэз' },
-            { start: 350, end: 400, phase: 'Воум' },
-            { start: 400, end: 550, phase: 'Фэз' },
-            { start: 550, end: 600, phase: 'Воум' },
-            { start: 600, end: 750, phase: 'Фэз' },
-            { start: 750, end: 800, phase: 'Воум' },
-            { start: 800, end: 950, phase: 'Фэз' },
-            { start: 950, end: 1000, phase: 'Воум' },
-            { start: 1000, end: 1150, phase: 'Фэз' },
-            { start: 1150, end: 1200, phase: 'Воум' },
-            { start: 1200, end: 1350, phase: 'Фэз' },
-            { start: 1350, end: 1400, phase: 'Воум' },
-            { start: 1400, end: 1440, phase: 'Фэз' },
-        ];
-        
-        for (let slot of schedule) {
-            if (totalMinutes >= slot.start && totalMinutes < slot.end) {
-                const timeLeft = slot.end - totalMinutes;
-                return {
-                    phase: slot.phase,
-                    timeLeft: formatTime(timeLeft * 60 * 1000),
-                    isPhase1: slot.phase === 'Фэз'
-                };
-            }
+        // После reference начинается Фэз
+        if (cyclePosition < DEIMOS_FASS_DURATION) {
+            // Фэз
+            return {
+                phase: 'Фэз',
+                timeLeft: formatTime(DEIMOS_FASS_DURATION - cyclePosition),
+                isPhase1: true
+            };
+        } else {
+            // Воум
+            return {
+                phase: 'Воум',
+                timeLeft: formatTime(DEIMOS_CYCLE - cyclePosition),
+                isPhase1: false
+            };
         }
     }
     
     // ЗЕМЛЯ
     if (locationKey === 'Земля') {
-        const now = new Date();
-        const hours = now.getUTCHours();
-        const minutes = now.getUTCMinutes();
-        const totalMinutes = hours * 60 + minutes;
+        const elapsed = now - EARTH_REFERENCE.getTime();
+        const cyclePosition = ((elapsed % EARTH_CYCLE) + EARTH_CYCLE) % EARTH_CYCLE;
         
-        // Цикл 480 минут (240м день + 240м ночь = 8 часов)
-        const schedule = [
-            { start: 0, end: 240, phase: 'День' },
-            { start: 240, end: 480, phase: 'Ночь' },
-            { start: 480, end: 720, phase: 'День' },
-            { start: 720, end: 960, phase: 'Ночь' },
-            { start: 960, end: 1200, phase: 'День' },
-            { start: 1200, end: 1440, phase: 'Ночь' },
-        ];
-        
-        for (let slot of schedule) {
-            if (totalMinutes >= slot.start && totalMinutes < slot.end) {
-                const timeLeft = slot.end - totalMinutes;
-                return {
-                    phase: slot.phase,
-                    timeLeft: formatTime(timeLeft * 60 * 1000),
-                    isPhase1: slot.phase === 'День'
-                };
-            }
+        // После reference начинается Ночь
+        if (cyclePosition < EARTH_NIGHT_DURATION) {
+            // Ночь
+            return {
+                phase: 'Ночь',
+                timeLeft: formatTime(EARTH_NIGHT_DURATION - cyclePosition),
+                isPhase1: false
+            };
+        } else {
+            // День
+            return {
+                phase: 'День',
+                timeLeft: formatTime(EARTH_CYCLE - cyclePosition),
+                isPhase1: true
+            };
         }
     }
     
