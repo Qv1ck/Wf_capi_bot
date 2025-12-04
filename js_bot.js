@@ -376,21 +376,24 @@ function getEarthCycle() {
 // ========================================================================
 
 // Известные точки (проверено в игре 02.12.2025 в 20:24 МСК = 17:24 UTC):
-// - Деймос: Воум, смена через 16м → закончится в 17:40 UTC
-// - Цетус: Ночь, смена через 16м → закончится в 17:40 UTC  
-// - Фортуна: Холод, смена через 9м → закончится в 17:33 UTC
+// - Деймос: ВОУМ (идёт сейчас), смена через 16м
+//   → Воум НАЧАЛСЯ в 17:24 - (50 - 16) = 17:24 - 34м = 16:50 UTC
+// - Цетус: НОЧЬ (идёт сейчас), смена через 16м
+//   → Ночь НАЧАЛАСЬ в 17:24 - (50 - 16) = 17:24 - 34м = 16:50 UTC
+// - Фортуна: ХОЛОД (идёт сейчас), смена через 9м = 540с
+//   → Холод НАЧАЛСЯ в 17:24 - (800 - 540) = 17:24 - 260с = 17:19:40 UTC
 
-const DEIMOS_REFERENCE = new Date('2025-12-02T17:40:00Z'); // конец Воум
+const DEIMOS_REFERENCE = new Date('2025-12-02T16:50:00Z'); // начало Воум
 const DEIMOS_FASS_DURATION = 150 * 60 * 1000;  // 150 минут
 const DEIMOS_VOME_DURATION = 50 * 60 * 1000;   // 50 минут
 const DEIMOS_CYCLE = DEIMOS_FASS_DURATION + DEIMOS_VOME_DURATION;
 
-const CETUS_REFERENCE = new Date('2025-12-02T17:40:00Z'); // конец Ночь
+const CETUS_REFERENCE = new Date('2025-12-02T16:50:00Z'); // начало Ночь
 const CETUS_DAY_DURATION = 100 * 60 * 1000;  // 100 минут
 const CETUS_NIGHT_DURATION = 50 * 60 * 1000; // 50 минут
 const CETUS_CYCLE = CETUS_DAY_DURATION + CETUS_NIGHT_DURATION;
 
-const FORTUNA_REFERENCE = new Date('2025-12-02T17:33:00Z'); // конец Холод
+const FORTUNA_REFERENCE = new Date('2025-12-02T17:19:40Z'); // начало Холод
 const FORTUNA_WARM_DURATION = 400 * 1000;  // 400 секунд (6м 40с)
 const FORTUNA_COLD_DURATION = 800 * 1000;  // 800 секунд (13м 20с)
 const FORTUNA_CYCLE = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION;
@@ -398,7 +401,7 @@ const FORTUNA_CYCLE = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION;
 const EARTH_DAY_DURATION = 240 * 60 * 1000;  // 240 минут
 const EARTH_NIGHT_DURATION = 240 * 60 * 1000; // 240 минут
 const EARTH_CYCLE = EARTH_DAY_DURATION + EARTH_NIGHT_DURATION;
-const EARTH_REFERENCE = new Date('2025-12-02T20:00:00Z'); // начало ночи (примерно)
+const EARTH_REFERENCE = new Date('2025-12-02T16:00:00Z'); // начало ночи
 
 function getCycleStatus(locationKey) {
     const now = Date.now();
@@ -408,20 +411,22 @@ function getCycleStatus(locationKey) {
         const elapsed = now - CETUS_REFERENCE.getTime();
         const cyclePosition = ((elapsed % CETUS_CYCLE) + CETUS_CYCLE) % CETUS_CYCLE;
         
-        // После reference начинается День
-        if (cyclePosition < CETUS_DAY_DURATION) {
-            // День
-            return {
-                phase: 'День',
-                timeLeft: formatTime(CETUS_DAY_DURATION - cyclePosition),
-                isPhase1: true
-            };
-        } else {
+        // Reference = начало Ночь
+        // 0 - 50м: Ночь
+        // 50м - 150м: День
+        if (cyclePosition < CETUS_NIGHT_DURATION) {
             // Ночь
             return {
                 phase: 'Ночь',
-                timeLeft: formatTime(CETUS_CYCLE - cyclePosition),
+                timeLeft: formatTime(CETUS_NIGHT_DURATION - cyclePosition),
                 isPhase1: false
+            };
+        } else {
+            // День
+            return {
+                phase: 'День',
+                timeLeft: formatTime(CETUS_CYCLE - cyclePosition),
+                isPhase1: true
             };
         }
     }
@@ -431,20 +436,22 @@ function getCycleStatus(locationKey) {
         const elapsed = now - FORTUNA_REFERENCE.getTime();
         const cyclePosition = ((elapsed % FORTUNA_CYCLE) + FORTUNA_CYCLE) % FORTUNA_CYCLE;
         
-        // После reference начинается Тепло
-        if (cyclePosition < FORTUNA_WARM_DURATION) {
-            // Тепло
-            return {
-                phase: 'Тепло',
-                timeLeft: formatTime(FORTUNA_WARM_DURATION - cyclePosition),
-                isPhase1: true
-            };
-        } else {
+        // Reference = начало Холод
+        // 0 - 800с: Холод
+        // 800с - 1200с: Тепло
+        if (cyclePosition < FORTUNA_COLD_DURATION) {
             // Холод
             return {
                 phase: 'Холод',
-                timeLeft: formatTime(FORTUNA_CYCLE - cyclePosition),
+                timeLeft: formatTime(FORTUNA_COLD_DURATION - cyclePosition),
                 isPhase1: false
+            };
+        } else {
+            // Тепло
+            return {
+                phase: 'Тепло',
+                timeLeft: formatTime(FORTUNA_CYCLE - cyclePosition),
+                isPhase1: true
             };
         }
     }
@@ -454,20 +461,22 @@ function getCycleStatus(locationKey) {
         const elapsed = now - DEIMOS_REFERENCE.getTime();
         const cyclePosition = ((elapsed % DEIMOS_CYCLE) + DEIMOS_CYCLE) % DEIMOS_CYCLE;
         
-        // После reference начинается Фэз
-        if (cyclePosition < DEIMOS_FASS_DURATION) {
-            // Фэз
-            return {
-                phase: 'Фэз',
-                timeLeft: formatTime(DEIMOS_FASS_DURATION - cyclePosition),
-                isPhase1: true
-            };
-        } else {
+        // Reference = начало Воум
+        // 0 - 50м: Воум
+        // 50м - 200м: Фэз
+        if (cyclePosition < DEIMOS_VOME_DURATION) {
             // Воум
             return {
                 phase: 'Воум',
-                timeLeft: formatTime(DEIMOS_CYCLE - cyclePosition),
+                timeLeft: formatTime(DEIMOS_VOME_DURATION - cyclePosition),
                 isPhase1: false
+            };
+        } else {
+            // Фэз
+            return {
+                phase: 'Фэз',
+                timeLeft: formatTime(DEIMOS_CYCLE - cyclePosition),
+                isPhase1: true
             };
         }
     }
@@ -477,7 +486,7 @@ function getCycleStatus(locationKey) {
         const elapsed = now - EARTH_REFERENCE.getTime();
         const cyclePosition = ((elapsed % EARTH_CYCLE) + EARTH_CYCLE) % EARTH_CYCLE;
         
-        // После reference начинается Ночь
+        // Reference = начало Ночь
         if (cyclePosition < EARTH_NIGHT_DURATION) {
             // Ночь
             return {
