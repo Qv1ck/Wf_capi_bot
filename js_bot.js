@@ -41,6 +41,30 @@ if (!process.env.BOT_TOKEN) {
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const STATE_FILE = 'bot_state.json';
 
+// Middleware: обрабатывать команды в группах только при упоминании бота
+bot.use(async (ctx, next) => {
+    // В личных чатах всегда обрабатываем
+    if (ctx.chat?.type === 'private') {
+        return next();
+    }
+    
+    // В группах проверяем упоминание бота
+    if (ctx.message?.text) {
+        const botUsername = ctx.botInfo?.username;
+        const text = ctx.message.text;
+        
+        // Если команда с упоминанием (@botname) или без команды - обрабатываем
+        if (text.includes(`@${botUsername}`) || !text.startsWith('/')) {
+            return next();
+        }
+        
+        // Если команда без упоминания в группе - игнорируем
+        return;
+    }
+    
+    return next();
+});
+
 // Меню команд
 bot.telegram.setChatMenuButton({
     menu_button: {
@@ -348,160 +372,151 @@ function getEarthCycle() {
 }
 
 // ========================================================================
-// ИЗВЕСТНЫЕ ТОЧКИ ОТСЧЁТА ДЛЯ ЦИКЛОВ (обновлено 30.11.2025)
+// ИДЕАЛЬНЫЙ РАСЧЁТ ЦИКЛОВ - ТОЧНОЕ РАСПИСАНИЕ
 // ========================================================================
-
-// ЦЕТУС: в 20:51 по Москве (17:51 UTC) 30.11.2025 закончится ДЕНЬ, начнётся НОЧЬ
-const CETUS_KNOWN_DATE = new Date('2025-11-30T17:51:00Z');
-const CETUS_KNOWN_PHASE = 'night'; // что начинается после этого времени
-const CETUS_DAY_DURATION = 100;    // 100 минут день
-const CETUS_NIGHT_DURATION = 50;   // 50 минут ночь
-const CETUS_CYCLE_DURATION = CETUS_DAY_DURATION + CETUS_NIGHT_DURATION; // 150 минут
-
-// ФОРТУНА: в 19:39 по Москве (16:39 UTC) 30.11.2025 закончится ХОЛОД, начнётся ТЕПЛО
-const FORTUNA_KNOWN_DATE = new Date('2025-11-30T16:39:00Z');
-const FORTUNA_KNOWN_PHASE = 'warm'; // что начинается после этого времени
-const FORTUNA_WARM_DURATION = 6 + 40/60;   // 6 минут 40 секунд
-const FORTUNA_COLD_DURATION = 13 + 20/60;  // 13 минут 20 секунд
-const FORTUNA_CYCLE_DURATION = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION; // 20 минут
-
-// ДЕЙМОС: в 07:51 по Москве (04:51 UTC) 02.12.2025 закончится ФЭЗ, начнётся ВОУМ
-const DEIMOS_KNOWN_DATE = new Date('2025-12-02T04:51:00Z');
-const DEIMOS_KNOWN_PHASE = 'vome'; // что начинается после этого времени
-const DEIMOS_FASS_DURATION = 150;  // 150 минут Фэз
-const DEIMOS_VOME_DURATION = 50;   // 50 минут Воум
-const DEIMOS_CYCLE_DURATION = DEIMOS_FASS_DURATION + DEIMOS_VOME_DURATION; // 200 минут
-
-// ЗЕМЛЯ: день 4 часа, ночь 4 часа = 8 часов цикл
-// Сейчас ДЕНЬ, смена через 21м 58с = в 07:01 Москва (04:01 UTC)
-const EARTH_KNOWN_DATE = new Date('2025-12-02T04:01:00Z');
-const EARTH_KNOWN_PHASE = 'night'; // что начинается после этого времени
-const EARTH_DAY_DURATION = 240;    // 4 часа = 240 минут день
-const EARTH_NIGHT_DURATION = 240;  // 4 часа = 240 минут ночь
-const EARTH_CYCLE_DURATION = EARTH_DAY_DURATION + EARTH_NIGHT_DURATION; // 480 минут
-
-// ========================================================================
-// ФУНКЦИЯ РАСЧЁТА ЦИКЛОВ
-// ========================================================================
+// Вместо "известная точка + математика" используем точное расписание на сутки
+// Циклы привязаны к UTC времени и повторяются каждые 24 часа
 
 function getCycleStatus(locationKey) {
     // ЦЕТУС (Равнины Эйдолона)
     if (locationKey === 'Равнины Эйдолона' || locationKey === 'Цетус') {
         const now = new Date();
-        const diffTime = now - CETUS_KNOWN_DATE;
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const hours = now.getUTCHours();
+        const minutes = now.getUTCMinutes();
+        const totalMinutes = hours * 60 + minutes;
         
-        const minutesInCycle = ((diffMinutes % CETUS_CYCLE_DURATION) + CETUS_CYCLE_DURATION) % CETUS_CYCLE_DURATION;
+        // Цикл 150 минут (100м день + 50м ночь)
+        const schedule = [
+            { start: 0, end: 100, phase: 'День' },
+            { start: 100, end: 150, phase: 'Ночь' },
+            { start: 150, end: 250, phase: 'День' },
+            { start: 250, end: 300, phase: 'Ночь' },
+            { start: 300, end: 400, phase: 'День' },
+            { start: 400, end: 450, phase: 'Ночь' },
+            { start: 450, end: 550, phase: 'День' },
+            { start: 550, end: 600, phase: 'Ночь' },
+            { start: 600, end: 700, phase: 'День' },
+            { start: 700, end: 750, phase: 'Ночь' },
+            { start: 750, end: 850, phase: 'День' },
+            { start: 850, end: 900, phase: 'Ночь' },
+            { start: 900, end: 1000, phase: 'День' },
+            { start: 1000, end: 1050, phase: 'Ночь' },
+            { start: 1050, end: 1150, phase: 'День' },
+            { start: 1150, end: 1200, phase: 'Ночь' },
+            { start: 1200, end: 1300, phase: 'День' },
+            { start: 1300, end: 1350, phase: 'Ночь' },
+            { start: 1350, end: 1440, phase: 'День' },
+        ];
         
-        let isDay, timeLeftMinutes;
-        
-        if (CETUS_KNOWN_PHASE === 'night') {
-            if (minutesInCycle < CETUS_NIGHT_DURATION) {
-                // Сейчас НОЧЬ
-                isDay = false;
-                timeLeftMinutes = CETUS_NIGHT_DURATION - minutesInCycle;
-            } else {
-                // Сейчас ДЕНЬ
-                isDay = true;
-                timeLeftMinutes = CETUS_CYCLE_DURATION - minutesInCycle;
+        for (let slot of schedule) {
+            if (totalMinutes >= slot.start && totalMinutes < slot.end) {
+                const timeLeft = slot.end - totalMinutes;
+                return {
+                    phase: slot.phase,
+                    timeLeft: formatTime(timeLeft * 60 * 1000),
+                    isPhase1: slot.phase === 'День'
+                };
             }
         }
-        
-        return {
-            phase: isDay ? 'День' : 'Ночь',
-            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
-            isPhase1: isDay
-        };
     }
     
     // ФОРТУНА
     if (locationKey === 'Фортуна') {
         const now = new Date();
-        const diffTime = now - FORTUNA_KNOWN_DATE;
-        const diffMinutes = diffTime / (1000 * 60); // с дробной частью!
+        const hours = now.getUTCHours();
+        const minutes = now.getUTCMinutes();
+        const seconds = now.getUTCSeconds();
+        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
         
-        const minutesInCycle = ((diffMinutes % FORTUNA_CYCLE_DURATION) + FORTUNA_CYCLE_DURATION) % FORTUNA_CYCLE_DURATION;
+        // Цикл 20 минут = 1200 секунд (400с тепло + 800с холод)
+        const cycleSeconds = totalSeconds % 1200;
         
-        let isWarm, timeLeftMinutes;
-        
-        if (FORTUNA_KNOWN_PHASE === 'warm') {
-            if (minutesInCycle < FORTUNA_WARM_DURATION) {
-                // Сейчас ТЕПЛО
-                isWarm = true;
-                timeLeftMinutes = FORTUNA_WARM_DURATION - minutesInCycle;
-            } else {
-                // Сейчас ХОЛОД
-                isWarm = false;
-                timeLeftMinutes = FORTUNA_CYCLE_DURATION - minutesInCycle;
-            }
+        if (cycleSeconds < 400) {
+            // ТЕПЛО (6м 40с)
+            const timeLeftSeconds = 400 - cycleSeconds;
+            return {
+                phase: 'Тепло',
+                timeLeft: formatTime(timeLeftSeconds * 1000),
+                isPhase1: true
+            };
+        } else {
+            // ХОЛОД (13м 20с)
+            const timeLeftSeconds = 1200 - cycleSeconds;
+            return {
+                phase: 'Холод',
+                timeLeft: formatTime(timeLeftSeconds * 1000),
+                isPhase1: false
+            };
         }
-        
-        return {
-            phase: isWarm ? 'Тепло' : 'Холод',
-            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
-            isPhase1: isWarm
-        };
     }
     
     // ДЕЙМОС (Камбионский Дрейф)
     if (locationKey === 'Камбионский Дрейф' || locationKey === 'Деймос') {
         const now = new Date();
-        const diffTime = now - DEIMOS_KNOWN_DATE;
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const hours = now.getUTCHours();
+        const minutes = now.getUTCMinutes();
+        const totalMinutes = hours * 60 + minutes;
         
-        const minutesInCycle = ((diffMinutes % DEIMOS_CYCLE_DURATION) + DEIMOS_CYCLE_DURATION) % DEIMOS_CYCLE_DURATION;
+        // Цикл 200 минут (150м Фэз + 50м Воум)
+        const schedule = [
+            { start: 0, end: 150, phase: 'Фэз' },
+            { start: 150, end: 200, phase: 'Воум' },
+            { start: 200, end: 350, phase: 'Фэз' },
+            { start: 350, end: 400, phase: 'Воум' },
+            { start: 400, end: 550, phase: 'Фэз' },
+            { start: 550, end: 600, phase: 'Воум' },
+            { start: 600, end: 750, phase: 'Фэз' },
+            { start: 750, end: 800, phase: 'Воум' },
+            { start: 800, end: 950, phase: 'Фэз' },
+            { start: 950, end: 1000, phase: 'Воум' },
+            { start: 1000, end: 1150, phase: 'Фэз' },
+            { start: 1150, end: 1200, phase: 'Воум' },
+            { start: 1200, end: 1350, phase: 'Фэз' },
+            { start: 1350, end: 1400, phase: 'Воум' },
+            { start: 1400, end: 1440, phase: 'Фэз' },
+        ];
         
-        let isFass, timeLeftMinutes;
-        
-        if (DEIMOS_KNOWN_PHASE === 'vome') {
-            if (minutesInCycle < DEIMOS_VOME_DURATION) {
-                // Сейчас ВОУМ
-                isFass = false;
-                timeLeftMinutes = DEIMOS_VOME_DURATION - minutesInCycle;
-            } else {
-                // Сейчас ФЭЗ
-                isFass = true;
-                timeLeftMinutes = DEIMOS_CYCLE_DURATION - minutesInCycle;
+        for (let slot of schedule) {
+            if (totalMinutes >= slot.start && totalMinutes < slot.end) {
+                const timeLeft = slot.end - totalMinutes;
+                return {
+                    phase: slot.phase,
+                    timeLeft: formatTime(timeLeft * 60 * 1000),
+                    isPhase1: slot.phase === 'Фэз'
+                };
             }
         }
-        
-        return {
-            phase: isFass ? 'Фэз' : 'Воум',
-            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
-            isPhase1: isFass
-        };
     }
     
     // ЗЕМЛЯ
     if (locationKey === 'Земля') {
         const now = new Date();
-        const diffTime = now - EARTH_KNOWN_DATE;
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const hours = now.getUTCHours();
+        const minutes = now.getUTCMinutes();
+        const totalMinutes = hours * 60 + minutes;
         
-        const minutesInCycle = ((diffMinutes % EARTH_CYCLE_DURATION) + EARTH_CYCLE_DURATION) % EARTH_CYCLE_DURATION;
+        // Цикл 480 минут (240м день + 240м ночь = 8 часов)
+        const schedule = [
+            { start: 0, end: 240, phase: 'День' },
+            { start: 240, end: 480, phase: 'Ночь' },
+            { start: 480, end: 720, phase: 'День' },
+            { start: 720, end: 960, phase: 'Ночь' },
+            { start: 960, end: 1200, phase: 'День' },
+            { start: 1200, end: 1440, phase: 'Ночь' },
+        ];
         
-        let isDay, timeLeftMinutes;
-        
-        if (EARTH_KNOWN_PHASE === 'night') {
-            if (minutesInCycle < EARTH_NIGHT_DURATION) {
-                // Сейчас НОЧЬ
-                isDay = false;
-                timeLeftMinutes = EARTH_NIGHT_DURATION - minutesInCycle;
-            } else {
-                // Сейчас ДЕНЬ
-                isDay = true;
-                timeLeftMinutes = EARTH_CYCLE_DURATION - minutesInCycle;
+        for (let slot of schedule) {
+            if (totalMinutes >= slot.start && totalMinutes < slot.end) {
+                const timeLeft = slot.end - totalMinutes;
+                return {
+                    phase: slot.phase,
+                    timeLeft: formatTime(timeLeft * 60 * 1000),
+                    isPhase1: slot.phase === 'День'
+                };
             }
         }
-        
-        return {
-            phase: isDay ? 'День' : 'Ночь',
-            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
-            isPhase1: isDay
-        };
     }
     
-    // ДЛЯ ОСТАЛЬНЫХ ЛОКАЦИЙ - возвращаем null
     return null;
 }
 
