@@ -21,12 +21,16 @@ const weaponsMelee = require('./weapons_melee.json');
 // База варфреймов Дувири
 const warframesDuviri = require('./warframes_duviri.json');
 
+// База модов
+const modsDB = require('./mods_database.json');
+
 // Логи загрузки
 console.log('✓ Загружено оружия:');
 console.log(`  Primary: ${Object.keys(weaponsPrimary).length}`);
 console.log(`  Secondary: ${Object.keys(weaponsSecondary).length}`);
 console.log(`  Melee: ${Object.keys(weaponsMelee).length}`);
 console.log(`✓ Загружено варфреймов Дувири: ${Object.keys(warframesDuviri).length}`);
+console.log(`✓ Загружено модов: ${Object.keys(modsDB).length}`);
 
 // Проверка токена
 if (!process.env.BOT_TOKEN) {
@@ -41,30 +45,6 @@ if (!process.env.BOT_TOKEN) {
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const STATE_FILE = 'bot_state.json';
 
-// Middleware: обрабатывать команды в группах только при упоминании бота
-bot.use(async (ctx, next) => {
-    // В личных чатах всегда обрабатываем
-    if (ctx.chat?.type === 'private') {
-        return next();
-    }
-    
-    // В группах проверяем упоминание бота
-    if (ctx.message?.text) {
-        const botUsername = ctx.botInfo?.username;
-        const text = ctx.message.text;
-        
-        // Если команда с упоминанием (@botname) или без команды - обрабатываем
-        if (text.includes(`@${botUsername}`) || !text.startsWith('/')) {
-            return next();
-        }
-        
-        // Если команда без упоминания в группе - игнорируем
-        return;
-    }
-    
-    return next();
-});
-
 // Меню команд
 bot.telegram.setChatMenuButton({
     menu_button: {
@@ -77,6 +57,7 @@ bot.telegram.setMyCommands([
     { command: 'start', description: '🏠 Главное меню' },
     { command: 'time', description: '🌍 Циклы' },
     { command: 'search', description: '🔍 Поиск варфрейма' },
+    { command: 'mod', description: '🔧 Информация о моде' },
     { command: 'primary', description: '🔫 Основное оружие' },
     { command: 'secondary', description: '🔫 Вторичное оружие' },
     { command: 'melee', description: '⚔️ Ближнее оружие' },
@@ -372,138 +353,160 @@ function getEarthCycle() {
 }
 
 // ========================================================================
-// РАСЧЁТ ЦИКЛОВ ОТ ИЗВЕСТНЫХ ТОЧЕК (обновлено 02.12.2025 20:24 МСК)
+// ИЗВЕСТНЫЕ ТОЧКИ ОТСЧЁТА ДЛЯ ЦИКЛОВ (обновлено 30.11.2025)
 // ========================================================================
 
-// Известные точки (проверено в игре 02.12.2025 в 20:24 МСК = 17:24 UTC):
-// - Деймос: ВОУМ (идёт сейчас), смена через 16м
-//   → Воум НАЧАЛСЯ в 17:24 - (50 - 16) = 17:24 - 34м = 16:50 UTC
-// - Цетус: НОЧЬ (идёт сейчас), смена через 16м
-//   → Ночь НАЧАЛАСЬ в 17:24 - (50 - 16) = 17:24 - 34м = 16:50 UTC
-// - Фортуна: ХОЛОД (идёт сейчас), смена через 9м = 540с
-//   → Холод НАЧАЛСЯ в 17:24 - (800 - 540) = 17:24 - 260с = 17:19:40 UTC
+// ЦЕТУС: в 20:51 по Москве (17:51 UTC) 30.11.2025 закончится ДЕНЬ, начнётся НОЧЬ
+const CETUS_KNOWN_DATE = new Date('2025-11-30T17:51:00Z');
+const CETUS_KNOWN_PHASE = 'night'; // что начинается после этого времени
+const CETUS_DAY_DURATION = 100;    // 100 минут день
+const CETUS_NIGHT_DURATION = 50;   // 50 минут ночь
+const CETUS_CYCLE_DURATION = CETUS_DAY_DURATION + CETUS_NIGHT_DURATION; // 150 минут
 
-const DEIMOS_REFERENCE = new Date('2025-12-02T16:50:00Z'); // начало Воум
-const DEIMOS_FASS_DURATION = 150 * 60 * 1000;  // 150 минут
-const DEIMOS_VOME_DURATION = 50 * 60 * 1000;   // 50 минут
-const DEIMOS_CYCLE = DEIMOS_FASS_DURATION + DEIMOS_VOME_DURATION;
+// ФОРТУНА: в 19:39 по Москве (16:39 UTC) 30.11.2025 закончится ХОЛОД, начнётся ТЕПЛО
+const FORTUNA_KNOWN_DATE = new Date('2025-11-30T16:39:00Z');
+const FORTUNA_KNOWN_PHASE = 'warm'; // что начинается после этого времени
+const FORTUNA_WARM_DURATION = 6 + 40/60;   // 6 минут 40 секунд
+const FORTUNA_COLD_DURATION = 13 + 20/60;  // 13 минут 20 секунд
+const FORTUNA_CYCLE_DURATION = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION; // 20 минут
 
-const CETUS_REFERENCE = new Date('2025-12-02T16:50:00Z'); // начало Ночь
-const CETUS_DAY_DURATION = 100 * 60 * 1000;  // 100 минут
-const CETUS_NIGHT_DURATION = 50 * 60 * 1000; // 50 минут
-const CETUS_CYCLE = CETUS_DAY_DURATION + CETUS_NIGHT_DURATION;
+// ДЕЙМОС: в 07:51 по Москве (04:51 UTC) 02.12.2025 закончится ФЭЗ, начнётся ВОУМ
+const DEIMOS_KNOWN_DATE = new Date('2025-12-02T04:51:00Z');
+const DEIMOS_KNOWN_PHASE = 'vome'; // что начинается после этого времени
+const DEIMOS_FASS_DURATION = 150;  // 150 минут Фэз
+const DEIMOS_VOME_DURATION = 50;   // 50 минут Воум
+const DEIMOS_CYCLE_DURATION = DEIMOS_FASS_DURATION + DEIMOS_VOME_DURATION; // 200 минут
 
-const FORTUNA_REFERENCE = new Date('2025-12-02T17:44:40Z'); // начало Холод (уточнено 20:42 МСК)
-const FORTUNA_WARM_DURATION = 400 * 1000;  // 400 секунд (6м 40с)
-const FORTUNA_COLD_DURATION = 800 * 1000;  // 800 секунд (13м 20с)
-const FORTUNA_CYCLE = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION;
+// ЗЕМЛЯ: день 4 часа, ночь 4 часа = 8 часов цикл
+// Сейчас ДЕНЬ, смена через 21м 58с = в 07:01 Москва (04:01 UTC)
+const EARTH_KNOWN_DATE = new Date('2025-12-02T04:01:00Z');
+const EARTH_KNOWN_PHASE = 'night'; // что начинается после этого времени
+const EARTH_DAY_DURATION = 240;    // 4 часа = 240 минут день
+const EARTH_NIGHT_DURATION = 240;  // 4 часа = 240 минут ночь
+const EARTH_CYCLE_DURATION = EARTH_DAY_DURATION + EARTH_NIGHT_DURATION; // 480 минут
 
-const EARTH_DAY_DURATION = 240 * 60 * 1000;  // 240 минут
-const EARTH_NIGHT_DURATION = 240 * 60 * 1000; // 240 минут
-const EARTH_CYCLE = EARTH_DAY_DURATION + EARTH_NIGHT_DURATION;
-const EARTH_REFERENCE = new Date('2025-12-02T16:00:00Z'); // начало ночи
+// ========================================================================
+// ФУНКЦИЯ РАСЧЁТА ЦИКЛОВ
+// ========================================================================
 
 function getCycleStatus(locationKey) {
-    const now = Date.now();
-    
-    // ЦЕТУС
+    // ЦЕТУС (Равнины Эйдолона)
     if (locationKey === 'Равнины Эйдолона' || locationKey === 'Цетус') {
-        const elapsed = now - CETUS_REFERENCE.getTime();
-        const cyclePosition = ((elapsed % CETUS_CYCLE) + CETUS_CYCLE) % CETUS_CYCLE;
+        const now = new Date();
+        const diffTime = now - CETUS_KNOWN_DATE;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
         
-        // Reference = начало Ночь
-        // 0 - 50м: Ночь
-        // 50м - 150м: День
-        if (cyclePosition < CETUS_NIGHT_DURATION) {
-            // Ночь
-            return {
-                phase: 'Ночь',
-                timeLeft: formatTime(CETUS_NIGHT_DURATION - cyclePosition),
-                isPhase1: false
-            };
-        } else {
-            // День
-            return {
-                phase: 'День',
-                timeLeft: formatTime(CETUS_CYCLE - cyclePosition),
-                isPhase1: true
-            };
+        const minutesInCycle = ((diffMinutes % CETUS_CYCLE_DURATION) + CETUS_CYCLE_DURATION) % CETUS_CYCLE_DURATION;
+        
+        let isDay, timeLeftMinutes;
+        
+        if (CETUS_KNOWN_PHASE === 'night') {
+            if (minutesInCycle < CETUS_NIGHT_DURATION) {
+                // Сейчас НОЧЬ
+                isDay = false;
+                timeLeftMinutes = CETUS_NIGHT_DURATION - minutesInCycle;
+            } else {
+                // Сейчас ДЕНЬ
+                isDay = true;
+                timeLeftMinutes = CETUS_CYCLE_DURATION - minutesInCycle;
+            }
         }
+        
+        return {
+            phase: isDay ? 'День' : 'Ночь',
+            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            isPhase1: isDay
+        };
     }
     
     // ФОРТУНА
     if (locationKey === 'Фортуна') {
-        const elapsed = now - FORTUNA_REFERENCE.getTime();
-        const cyclePosition = ((elapsed % FORTUNA_CYCLE) + FORTUNA_CYCLE) % FORTUNA_CYCLE;
+        const now = new Date();
+        const diffTime = now - FORTUNA_KNOWN_DATE;
+        const diffMinutes = diffTime / (1000 * 60); // с дробной частью!
         
-        // Reference = начало Холод
-        // 0 - 800с: Холод
-        // 800с - 1200с: Тепло
-        if (cyclePosition < FORTUNA_COLD_DURATION) {
-            // Холод
-            return {
-                phase: 'Холод',
-                timeLeft: formatTime(FORTUNA_COLD_DURATION - cyclePosition),
-                isPhase1: false
-            };
-        } else {
-            // Тепло
-            return {
-                phase: 'Тепло',
-                timeLeft: formatTime(FORTUNA_CYCLE - cyclePosition),
-                isPhase1: true
-            };
+        const minutesInCycle = ((diffMinutes % FORTUNA_CYCLE_DURATION) + FORTUNA_CYCLE_DURATION) % FORTUNA_CYCLE_DURATION;
+        
+        let isWarm, timeLeftMinutes;
+        
+        if (FORTUNA_KNOWN_PHASE === 'warm') {
+            if (minutesInCycle < FORTUNA_WARM_DURATION) {
+                // Сейчас ТЕПЛО
+                isWarm = true;
+                timeLeftMinutes = FORTUNA_WARM_DURATION - minutesInCycle;
+            } else {
+                // Сейчас ХОЛОД
+                isWarm = false;
+                timeLeftMinutes = FORTUNA_CYCLE_DURATION - minutesInCycle;
+            }
         }
+        
+        return {
+            phase: isWarm ? 'Тепло' : 'Холод',
+            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            isPhase1: isWarm
+        };
     }
     
-    // ДЕЙМОС
+    // ДЕЙМОС (Камбионский Дрейф)
     if (locationKey === 'Камбионский Дрейф' || locationKey === 'Деймос') {
-        const elapsed = now - DEIMOS_REFERENCE.getTime();
-        const cyclePosition = ((elapsed % DEIMOS_CYCLE) + DEIMOS_CYCLE) % DEIMOS_CYCLE;
+        const now = new Date();
+        const diffTime = now - DEIMOS_KNOWN_DATE;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
         
-        // Reference = начало Воум
-        // 0 - 50м: Воум
-        // 50м - 200м: Фэз
-        if (cyclePosition < DEIMOS_VOME_DURATION) {
-            // Воум
-            return {
-                phase: 'Воум',
-                timeLeft: formatTime(DEIMOS_VOME_DURATION - cyclePosition),
-                isPhase1: false
-            };
-        } else {
-            // Фэз
-            return {
-                phase: 'Фэз',
-                timeLeft: formatTime(DEIMOS_CYCLE - cyclePosition),
-                isPhase1: true
-            };
+        const minutesInCycle = ((diffMinutes % DEIMOS_CYCLE_DURATION) + DEIMOS_CYCLE_DURATION) % DEIMOS_CYCLE_DURATION;
+        
+        let isFass, timeLeftMinutes;
+        
+        if (DEIMOS_KNOWN_PHASE === 'vome') {
+            if (minutesInCycle < DEIMOS_VOME_DURATION) {
+                // Сейчас ВОУМ
+                isFass = false;
+                timeLeftMinutes = DEIMOS_VOME_DURATION - minutesInCycle;
+            } else {
+                // Сейчас ФЭЗ
+                isFass = true;
+                timeLeftMinutes = DEIMOS_CYCLE_DURATION - minutesInCycle;
+            }
         }
+        
+        return {
+            phase: isFass ? 'Фэз' : 'Воум',
+            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            isPhase1: isFass
+        };
     }
     
     // ЗЕМЛЯ
     if (locationKey === 'Земля') {
-        const elapsed = now - EARTH_REFERENCE.getTime();
-        const cyclePosition = ((elapsed % EARTH_CYCLE) + EARTH_CYCLE) % EARTH_CYCLE;
+        const now = new Date();
+        const diffTime = now - EARTH_KNOWN_DATE;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
         
-        // Reference = начало Ночь
-        if (cyclePosition < EARTH_NIGHT_DURATION) {
-            // Ночь
-            return {
-                phase: 'Ночь',
-                timeLeft: formatTime(EARTH_NIGHT_DURATION - cyclePosition),
-                isPhase1: false
-            };
-        } else {
-            // День
-            return {
-                phase: 'День',
-                timeLeft: formatTime(EARTH_CYCLE - cyclePosition),
-                isPhase1: true
-            };
+        const minutesInCycle = ((diffMinutes % EARTH_CYCLE_DURATION) + EARTH_CYCLE_DURATION) % EARTH_CYCLE_DURATION;
+        
+        let isDay, timeLeftMinutes;
+        
+        if (EARTH_KNOWN_PHASE === 'night') {
+            if (minutesInCycle < EARTH_NIGHT_DURATION) {
+                // Сейчас НОЧЬ
+                isDay = false;
+                timeLeftMinutes = EARTH_NIGHT_DURATION - minutesInCycle;
+            } else {
+                // Сейчас ДЕНЬ
+                isDay = true;
+                timeLeftMinutes = EARTH_CYCLE_DURATION - minutesInCycle;
+            }
         }
+        
+        return {
+            phase: isDay ? 'День' : 'Ночь',
+            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            isPhase1: isDay
+        };
     }
     
+    // ДЛЯ ОСТАЛЬНЫХ ЛОКАЦИЙ - возвращаем null
     return null;
 }
 
@@ -995,6 +998,121 @@ bot.command('search', async (ctx) => {
         await ctx.reply('❌ Ничего не найдено. Попробуй другой запрос.');
     }
 });
+
+// ========================================================================
+// КОМАНДА: /mod - ПОИСК МОДОВ
+// ========================================================================
+
+bot.command('mod', async (ctx) => {
+    let query = ctx.message.text.replace(/\/mod(@\w+)?/, '').trim();
+    
+    if (!query) {
+        return ctx.reply(
+            '🔧 *Поиск модов*\n\n' +
+            'Использование: `/mod <название>`\n\n' +
+            'Примеры:\n' +
+            '`/mod Зазубрины`\n' +
+            '`/mod Serration`\n' +
+            '`/mod Адаптация`\n' +
+            '`/mod Blind Rage`',
+            { parse_mode: 'Markdown' }
+        );
+    }
+
+    console.log(`✓ Поиск мода: '${query}' от ${ctx.from.first_name}`);
+    
+    // Ищем мод (поддержка русского и английского)
+    const mod = searchMod(query);
+    
+    if (mod) {
+        console.log(`✓ Найден мод: ${mod.name}`);
+        const message = formatModInfo(mod);
+        await ctx.replyWithMarkdown(message, { disable_web_page_preview: true });
+    } else {
+        console.log(`✗ Мод не найден: '${query}'`);
+        await ctx.reply('❌ Мод не найден. Попробуйте другое название.');
+    }
+});
+
+// Функция поиска мода
+function searchMod(query) {
+    const queryLower = query.toLowerCase();
+    
+    // Прямой поиск (case-insensitive)
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (key.toLowerCase() === queryLower) {
+            return mod;
+        }
+    }
+    
+    // Поиск по началу названия
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (key.toLowerCase().startsWith(queryLower)) {
+            return mod;
+        }
+    }
+    
+    // Поиск по вхождению
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (key.toLowerCase().includes(queryLower)) {
+            return mod;
+        }
+    }
+    
+    return null;
+}
+
+// Функция форматирования информации о моде
+function formatModInfo(mod) {
+    // Определяем какое название показать первым (русское если есть)
+    let mainName = mod.name;
+    let secondName = '';
+    
+    if (mod.nameRu && mod.nameRu !== mod.name && !mod.nameRu.includes('|COLOR|')) {
+        mainName = mod.nameRu;
+        secondName = mod.name;
+    }
+    
+    let message = `🔧 *${mainName}*`;
+    if (secondName) {
+        message += ` _(${secondName})_`;
+    }
+    message += '\n\n';
+    
+    // Характеристики (только ранг 0 и макс)
+    if (mod.levelStats && mod.levelStats.length > 0) {
+        message += `📊 *Характеристики:*\n`;
+        
+        const maxRank = mod.levelStats.length - 1;
+        
+        message += `Ранг 0: ${mod.levelStats[0].stats.join(', ')}\n`;
+        message += `Ранг ${maxRank}: ${mod.levelStats[maxRank].stats.join(', ')}\n`;
+    }
+    
+    // Дроп-локации
+    if (mod.drops && mod.drops.length > 0) {
+        message += `\n📍 *Где найти:*\n`;
+        
+        // Сортируем по шансу дропа
+        const sortedDrops = [...mod.drops].sort((a, b) => b.chance - a.chance);
+        const topDrops = sortedDrops.slice(0, 5);
+        
+        topDrops.forEach(drop => {
+            const chance = (drop.chance * 100).toFixed(2);
+            message += `• ${drop.location}: ${chance}%\n`;
+        });
+        
+        if (mod.drops.length > 5) {
+            message += `_...и ещё ${mod.drops.length - 5} локаций_\n`;
+        }
+    } else {
+        // Если дропов нет
+        message += `\n📍 *Где найти:*\n`;
+        message += `Нет информации\n`;
+    }
+    
+    return message;
+}
 
 // ========================================================================
 // CALLBACK КНОПКИ
