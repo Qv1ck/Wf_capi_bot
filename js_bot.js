@@ -1093,17 +1093,34 @@ function formatModInfo(mod) {
     if (mod.drops && mod.drops.length > 0) {
         message += `\n📍 *Где найти:*\n`;
         
+        // Фильтруем только дропы этого мода (по полю type)
+        const relevantDrops = mod.drops.filter(d => d.type === mod.name);
+        
         // Сортируем по шансу дропа, топ-3
-        const sortedDrops = [...mod.drops].sort((a, b) => b.chance - a.chance);
+        const sortedDrops = [...relevantDrops].sort((a, b) => b.chance - a.chance);
         const topDrops = sortedDrops.slice(0, 3);
         
-        topDrops.forEach(drop => {
-            const chance = (drop.chance * 100).toFixed(2);
-            message += `• ${drop.location}: ${chance}%\n`;
-        });
+        if (topDrops.length > 0) {
+            topDrops.forEach(drop => {
+                const chance = (drop.chance * 100).toFixed(2);
+                message += `• ${drop.location}: ${chance}%\n`;
+            });
+        } else {
+            message += `Нет информации\n`;
+        }
     } else {
         message += `\n📍 *Где найти:*\n`;
         message += `Нет информации\n`;
+    }
+    
+    // Проверяем есть ли Прайм-версия (только для не-прайм модов)
+    if (!mod.name.includes('Primed')) {
+        const primedName = 'Primed ' + mod.name;
+        const primedMod = modsDB[primedName];
+        if (primedMod) {
+            const primedNameRu = primedMod.nameRu || primedName;
+            message += `\n💎 Есть Прайм-версия: /mod ${primedNameRu}`;
+        }
     }
     
     return message;
