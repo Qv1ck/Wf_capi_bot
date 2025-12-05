@@ -1093,20 +1093,15 @@ function formatModInfo(mod) {
     if (mod.drops && mod.drops.length > 0) {
         message += `\n📍 *Где найти:*\n`;
         
-        // Сортируем по шансу дропа
+        // Сортируем по шансу дропа, топ-3
         const sortedDrops = [...mod.drops].sort((a, b) => b.chance - a.chance);
-        const topDrops = sortedDrops.slice(0, 5);
+        const topDrops = sortedDrops.slice(0, 3);
         
         topDrops.forEach(drop => {
             const chance = (drop.chance * 100).toFixed(2);
             message += `• ${drop.location}: ${chance}%\n`;
         });
-        
-        if (mod.drops.length > 5) {
-            message += `_...и ещё ${mod.drops.length - 5} локаций_\n`;
-        }
     } else {
-        // Если дропов нет
         message += `\n📍 *Где найти:*\n`;
         message += `Нет информации\n`;
     }
