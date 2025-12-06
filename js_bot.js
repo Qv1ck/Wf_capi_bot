@@ -1398,9 +1398,9 @@ bot.on('inline_query', async (ctx) => {
     // Алиасы команд (только циклы - остальное требует API)
     const commandAliases = {
         'циклы': 'cycles', 'цикл': 'cycles', 'cycles': 'cycles',
-        'цетус': 'cycles', 'долина': 'cycles', 'ночь': 'cycles', 'день': 'cycles',
-        'камбион': 'cycles', 'заруман': 'cycles', 'time': 'cycles',
-        'тепло': 'cycles', 'холод': 'cycles', 'фасс': 'cycles', 'вом': 'cycles'
+        'цетус': 'cycles', 'фортуна': 'cycles', 'ночь': 'cycles', 'день': 'cycles',
+        'деймос': 'cycles', 'зариман': 'cycles', 'time': 'cycles',
+        'тепло': 'cycles', 'холод': 'cycles', 'фасс': 'cycles', 'воум': 'cycles'
     };
     
     // Проверяем, совпадает ли запрос с командой
