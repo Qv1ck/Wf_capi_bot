@@ -1395,6 +1395,33 @@ bot.on('inline_query', async (ctx) => {
     
     const results = [];
     
+    // Алиасы команд (только циклы - остальное требует API)
+    const commandAliases = {
+        'циклы': 'cycles', 'цикл': 'cycles', 'cycles': 'cycles',
+        'цетус': 'cycles', 'долина': 'cycles', 'ночь': 'cycles', 'день': 'cycles',
+        'камбион': 'cycles', 'заруман': 'cycles', 'time': 'cycles',
+        'тепло': 'cycles', 'холод': 'cycles', 'фасс': 'cycles', 'вом': 'cycles'
+    };
+    
+    // Проверяем, совпадает ли запрос с командой
+    const matchedCommand = commandAliases[query];
+    if (matchedCommand) {
+        const commandInfo = await getCommandPreview(matchedCommand);
+        if (commandInfo) {
+            results.push({
+                type: 'article',
+                id: `cmd_${matchedCommand}`,
+                title: commandInfo.title,
+                description: commandInfo.description,
+                input_message_content: {
+                    message_text: commandInfo.message,
+                    parse_mode: 'Markdown',
+                    disable_web_page_preview: true
+                }
+            });
+        }
+    }
+    
     // Поиск модов
     const foundMods = searchModsInline(query, 25);
     foundMods.forEach((mod, index) => {
@@ -1443,6 +1470,55 @@ bot.on('inline_query', async (ctx) => {
         console.error('❌ Ошибка inline:', error.message);
     }
 });
+
+// Функция получения превью команды для inline
+async function getCommandPreview(command) {
+    try {
+        switch (command) {
+            case 'cycles': {
+                // Используем математический расчёт
+                const cetus = getCycleStatus('Цетус');
+                const fortuna = getCycleStatus('Фортуна');
+                const deimos = getCycleStatus('Деймос');
+                const zariman = getCycleStatus('Заруман');
+                
+                let message = '🌍 *Циклы открытых миров:*\n\n';
+                
+                // Цетус
+                const cetusIcon = cetus.isPhase1 ? '☀️' : '🌙';
+                message += `*Цетус:* ${cetusIcon} ${cetus.phase}\n`;
+                message += `⏱ ${cetus.timeLeft}\n\n`;
+                
+                // Долина
+                const fortunaIcon = fortuna.isPhase1 ? '🔥' : '❄️';
+                message += `*Долина Сфер:* ${fortunaIcon} ${fortuna.phase}\n`;
+                message += `⏱ ${fortuna.timeLeft}\n\n`;
+                
+                // Камбион
+                const deimosIcon = deimos.isPhase1 ? '☀️' : '🌙';
+                message += `*Камбион:* ${deimosIcon} ${deimos.phase}\n`;
+                message += `⏱ ${deimos.timeLeft}\n\n`;
+                
+                // Заруман
+                const zarimanIcon = zariman.isPhase1 ? '🔵' : '🔴';
+                message += `*Заруман:* ${zarimanIcon} ${zariman.phase}\n`;
+                message += `⏱ ${zariman.timeLeft}`;
+                
+                return {
+                    title: '🌍 Циклы открытых миров',
+                    description: `Цетус: ${cetus.phase}, Долина: ${fortuna.phase}`,
+                    message: message
+                };
+            }
+            
+            default:
+                return null;
+        }
+    } catch (error) {
+        console.error(`Ошибка получения ${command}:`, error.message);
+        return null;
+    }
+}
 
 // Функция поиска модов для inline (возвращает массив)
 function searchModsInline(query, limit = 25) {
