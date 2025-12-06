@@ -4,6 +4,115 @@
 
 const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
+const https = require('https');
+
+// ========================================================================
+// API TENNO.TOOLS - ЖИВЫЕ ДАННЫЕ
+// ========================================================================
+
+// Кэш для API данных (обновляется каждые 60 секунд)
+let worldstateCache = null;
+let worldstateCacheTime = 0;
+const CACHE_DURATION = 60000; // 60 секунд
+
+// Функция запроса к API
+function fetchTennoAPI() {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'api.tenno.tools',
+            path: '/worldstate/pc',
+            method: 'GET',
+            headers: { 'User-Agent': 'WarframeBot/1.0' }
+        };
+        
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        reject(new Error('JSON parse error'));
+                    }
+                } else {
+                    reject(new Error(`HTTP ${res.statusCode}`));
+                }
+            });
+        });
+        
+        req.on('error', reject);
+        req.setTimeout(10000, () => {
+            req.destroy();
+            reject(new Error('Timeout'));
+        });
+        req.end();
+    });
+}
+
+// Получить worldstate с кэшированием
+async function getWorldstate() {
+    const now = Date.now();
+    if (worldstateCache && (now - worldstateCacheTime) < CACHE_DURATION) {
+        return worldstateCache;
+    }
+    
+    try {
+        worldstateCache = await fetchTennoAPI();
+        worldstateCacheTime = now;
+        console.log('✓ Worldstate обновлён');
+        return worldstateCache;
+    } catch (error) {
+        console.error('❌ Ошибка API:', error.message);
+        return worldstateCache; // Вернуть старый кэш если есть
+    }
+}
+
+// Переводы
+const TIER_NAMES = {
+    'Lith': 'Лит', 'Meso': 'Мезо', 'Neo': 'Нео', 
+    'Axi': 'Акси', 'Requiem': 'Реквием', 'Omnia': 'Омния'
+};
+
+const MISSION_TYPES = {
+    'Exterminate': 'Истребление', 'Survival': 'Выживание', 'Defense': 'Защита',
+    'Capture': 'Захват', 'Rescue': 'Спасение', 'Sabotage': 'Саботаж',
+    'Mobile Defense': 'Мобильная Защита', 'Excavation': 'Раскопки',
+    'Interception': 'Перехват', 'Spy': 'Шпионаж', 'Assassination': 'Убийство',
+    'Disruption': 'Сбой', 'Void Cascade': 'Каскад Бездны', 'Void Flood': 'Потоп Бездны',
+    'Void Armageddon': 'Армагеддон Бездны', 'Defection': 'Дезертирство',
+    'Hive': 'Улей', 'Hijack': 'Угон', 'Infested Salvage': 'Заражённый Улов'
+};
+
+const FACTION_NAMES = {
+    'Grineer': 'Гринир', 'Corpus': 'Корпус', 'Infested': 'Заражённые',
+    'Orokin': 'Орокин', 'Corrupted': 'Осквернённые', 'Crossfire': 'Перестрелка'
+};
+
+function translateMission(type) {
+    return MISSION_TYPES[type] || type;
+}
+
+function translateFaction(faction) {
+    return FACTION_NAMES[faction] || faction;
+}
+
+function translateTier(tier) {
+    return TIER_NAMES[tier] || tier;
+}
+
+function formatTimeLeft(endTimestamp) {
+    const now = Math.floor(Date.now() / 1000);
+    const diff = endTimestamp - now;
+    
+    if (diff <= 0) return 'Завершено';
+    
+    const hours = Math.floor(diff / 3600);
+    const minutes = Math.floor((diff % 3600) / 60);
+    
+    if (hours > 0) return `${hours}ч ${minutes}м`;
+    return `${minutes}м`;
+}
 
 // Локальные базы данных
 const abilitiesDB = require('./warframe_abilities_ru.json');
@@ -55,14 +164,14 @@ bot.telegram.setChatMenuButton({
 // Регистрация команд
 bot.telegram.setMyCommands([
     { command: 'start', description: '🏠 Главное меню' },
-    { command: 'time', description: '🌍 Циклы' },
+    { command: 'time', description: '🌍 Циклы миров' },
+    { command: 'fissures', description: '🔥 Разломы Бездны' },
+    { command: 'sortie', description: '📋 Вылазки' },
+    { command: 'baro', description: '🛸 Баро Ки\'Тиир' },
+    { command: 'invasions', description: '⚔️ Вторжения' },
     { command: 'search', description: '🔍 Поиск варфрейма' },
     { command: 'mod', description: '🔧 Информация о моде' },
-    { command: 'primary', description: '🔫 Основное оружие' },
-    { command: 'secondary', description: '🔫 Вторичное оружие' },
-    { command: 'melee', description: '⚔️ Ближнее оружие' },
-    { command: 'chain_guns', description: '🌀 Цепь Дувири (оружие)' },
-    { command: 'chain_frame', description: '🤖 Цепь Дувири (варфреймы)' },
+    { command: 'chain_frame', description: '🤖 Цепь Дувири' },
     { command: 'subscribe', description: '🔔 Подписаться' }
 ]).catch(err => console.log('Не удалось зарегистрировать команды:', err));
 
@@ -976,6 +1085,190 @@ bot.command(['time', 'cycles'], async (ctx) => {
 });
 
 // ========================================================================
+// КОМАНДА /fissures - РАЗЛОМЫ БЕЗДНЫ
+// ========================================================================
+
+bot.command(['fissures', 'fissure', 'разломы'], async (ctx) => {
+    console.log('🔥 Команда /fissures вызвана');
+    
+    try {
+        const ws = await getWorldstate();
+        
+        if (!ws || !ws.fissures || !ws.fissures.data) {
+            return ctx.reply('❌ Не удалось получить данные о разломах.');
+        }
+        
+        const fissures = ws.fissures.data;
+        
+        if (fissures.length === 0) {
+            return ctx.reply('🔥 Нет активных разломов.');
+        }
+        
+        // Группируем по тирам
+        const byTier = {};
+        fissures.forEach(f => {
+            if (!f.hard) { // Обычные, не Steel Path
+                const tier = f.tier || 'Unknown';
+                if (!byTier[tier]) byTier[tier] = [];
+                byTier[tier].push(f);
+            }
+        });
+        
+        let message = '🔥 *Разломы Бездны:*\n\n';
+        
+        const tierOrder = ['Lith', 'Meso', 'Neo', 'Axi', 'Requiem', 'Omnia'];
+        
+        tierOrder.forEach(tier => {
+            if (byTier[tier] && byTier[tier].length > 0) {
+                message += `*${translateTier(tier)}:*\n`;
+                byTier[tier].slice(0, 3).forEach(f => {
+                    const mission = translateMission(f.missionType);
+                    const timeLeft = formatTimeLeft(f.end);
+                    message += `• ${mission} — ${f.location}\n`;
+                    message += `  ⏱ ${timeLeft}\n`;
+                });
+                message += '\n';
+            }
+        });
+        
+        await ctx.replyWithMarkdown(message);
+    } catch (error) {
+        console.error('❌ Ошибка /fissures:', error);
+        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+});
+
+// ========================================================================
+// КОМАНДА /sortie - ВЫЛАЗКИ
+// ========================================================================
+
+bot.command(['sortie', 'вылазка', 'вылазки'], async (ctx) => {
+    console.log('📋 Команда /sortie вызвана');
+    
+    try {
+        const ws = await getWorldstate();
+        
+        if (!ws || !ws.sorties || !ws.sorties.data || ws.sorties.data.length === 0) {
+            return ctx.reply('❌ Не удалось получить данные о вылазках.');
+        }
+        
+        const sortie = ws.sorties.data[0];
+        
+        let message = '📋 *Вылазка дня*\n\n';
+        message += `👤 Босс: *${sortie.bossName || 'Неизвестен'}*\n`;
+        message += `🎭 Фракция: ${translateFaction(sortie.faction)}\n`;
+        message += `⏱ До конца: ${formatTimeLeft(sortie.end)}\n\n`;
+        
+        if (sortie.missions && sortie.missions.length > 0) {
+            message += '*Миссии:*\n';
+            sortie.missions.forEach((m, i) => {
+                const mission = translateMission(m.missionType);
+                message += `\n*${i + 1}. ${mission}*\n`;
+                message += `📍 ${m.location}\n`;
+                if (m.modifier) {
+                    message += `⚠️ ${m.modifier}\n`;
+                }
+            });
+        }
+        
+        await ctx.replyWithMarkdown(message);
+    } catch (error) {
+        console.error('❌ Ошибка /sortie:', error);
+        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+});
+
+// ========================================================================
+// КОМАНДА /baro - БАРО КИ'ТИИР
+// ========================================================================
+
+bot.command(['baro', 'баро', 'торговец'], async (ctx) => {
+    console.log('🛸 Команда /baro вызвана');
+    
+    try {
+        const ws = await getWorldstate();
+        
+        if (!ws || !ws.voidtrader) {
+            return ctx.reply('❌ Не удалось получить данные о Баро.');
+        }
+        
+        const baro = ws.voidtrader.data;
+        
+        let message = '🛸 *Баро Ки\'Тиир*\n\n';
+        
+        if (baro.active) {
+            message += `📍 Локация: *${baro.location}*\n`;
+            message += `⏱ Улетит через: ${formatTimeLeft(baro.end)}\n\n`;
+            
+            if (baro.items && baro.items.length > 0) {
+                message += `📦 *Товары (${baro.items.length}):*\n`;
+                baro.items.slice(0, 15).forEach(item => {
+                    message += `• ${item.name}`;
+                    if (item.ducats) message += ` — ${item.ducats}🦆`;
+                    if (item.credits) message += ` ${item.credits}💰`;
+                    message += '\n';
+                });
+                if (baro.items.length > 15) {
+                    message += `\n_...и ещё ${baro.items.length - 15} товаров_`;
+                }
+            }
+        } else {
+            message += `⏱ Прилетит через: *${formatTimeLeft(baro.start)}*\n`;
+            message += `📍 Реле: ${baro.location || 'Неизвестно'}`;
+        }
+        
+        await ctx.replyWithMarkdown(message);
+    } catch (error) {
+        console.error('❌ Ошибка /baro:', error);
+        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+});
+
+// ========================================================================
+// КОМАНДА /invasions - ВТОРЖЕНИЯ
+// ========================================================================
+
+bot.command(['invasions', 'invasion', 'вторжения'], async (ctx) => {
+    console.log('⚔️ Команда /invasions вызвана');
+    
+    try {
+        const ws = await getWorldstate();
+        
+        if (!ws || !ws.invasions || !ws.invasions.data) {
+            return ctx.reply('❌ Не удалось получить данные о вторжениях.');
+        }
+        
+        const invasions = ws.invasions.data.filter(i => !i.completed);
+        
+        if (invasions.length === 0) {
+            return ctx.reply('⚔️ Нет активных вторжений.');
+        }
+        
+        let message = '⚔️ *Вторжения:*\n\n';
+        
+        invasions.slice(0, 8).forEach(inv => {
+            message += `📍 *${inv.location}*\n`;
+            message += `${translateFaction(inv.attackingFaction)} vs ${translateFaction(inv.defendingFaction)}\n`;
+            
+            const rewards = [];
+            if (inv.attackerReward) rewards.push(inv.attackerReward);
+            if (inv.defenderReward) rewards.push(inv.defenderReward);
+            if (rewards.length > 0) {
+                message += `🎁 ${rewards.join(' | ')}\n`;
+            }
+            
+            const progress = Math.abs(inv.progress || 0).toFixed(1);
+            message += `📊 ${progress}%\n\n`;
+        });
+        
+        await ctx.replyWithMarkdown(message);
+    } catch (error) {
+        console.error('❌ Ошибка /invasions:', error);
+        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+});
+
+// ========================================================================
 // КОМАНДА /search
 // ========================================================================
 
@@ -1395,12 +1688,22 @@ bot.on('inline_query', async (ctx) => {
     
     const results = [];
     
-    // Алиасы команд (только циклы - остальное требует API)
+    // Алиасы команд (теперь API работает!)
     const commandAliases = {
         'циклы': 'cycles', 'цикл': 'cycles', 'cycles': 'cycles',
-        'цетус': 'cycles', 'фортуна': 'cycles', 'ночь': 'cycles', 'день': 'cycles',
-        'деймос': 'cycles', 'зариман': 'cycles', 'time': 'cycles',
-        'тепло': 'cycles', 'холод': 'cycles', 'фасс': 'cycles', 'воум': 'cycles'
+        'цетус': 'cycles', 'долина': 'cycles', 'ночь': 'cycles', 'день': 'cycles',
+        'камбион': 'cycles', 'заруман': 'cycles', 'time': 'cycles',
+        'тепло': 'cycles', 'холод': 'cycles', 'фасс': 'cycles', 'вом': 'cycles',
+        
+        'разломы': 'fissures', 'разлом': 'fissures', 'fissures': 'fissures',
+        'реликвии': 'fissures', 'лит': 'fissures', 'мезо': 'fissures',
+        'нео': 'fissures', 'акси': 'fissures',
+        
+        'вылазка': 'sortie', 'вылазки': 'sortie', 'sortie': 'sortie',
+        
+        'баро': 'baro', 'baro': 'baro', 'торговец': 'baro',
+        
+        'вторжения': 'invasions', 'invasions': 'invasions'
     };
     
     // Проверяем, совпадает ли запрос с командой
@@ -1484,22 +1787,18 @@ async function getCommandPreview(command) {
                 
                 let message = '🌍 *Циклы открытых миров:*\n\n';
                 
-                // Цетус
                 const cetusIcon = cetus.isPhase1 ? '☀️' : '🌙';
                 message += `*Цетус:* ${cetusIcon} ${cetus.phase}\n`;
                 message += `⏱ ${cetus.timeLeft}\n\n`;
                 
-                // Долина
                 const fortunaIcon = fortuna.isPhase1 ? '🔥' : '❄️';
                 message += `*Долина Сфер:* ${fortunaIcon} ${fortuna.phase}\n`;
                 message += `⏱ ${fortuna.timeLeft}\n\n`;
                 
-                // Камбион
                 const deimosIcon = deimos.isPhase1 ? '☀️' : '🌙';
                 message += `*Камбион:* ${deimosIcon} ${deimos.phase}\n`;
                 message += `⏱ ${deimos.timeLeft}\n\n`;
                 
-                // Заруман
                 const zarimanIcon = zariman.isPhase1 ? '🔵' : '🔴';
                 message += `*Заруман:* ${zarimanIcon} ${zariman.phase}\n`;
                 message += `⏱ ${zariman.timeLeft}`;
@@ -1507,6 +1806,102 @@ async function getCommandPreview(command) {
                 return {
                     title: '🌍 Циклы открытых миров',
                     description: `Цетус: ${cetus.phase}, Долина: ${fortuna.phase}`,
+                    message: message
+                };
+            }
+            
+            case 'fissures': {
+                const ws = await getWorldstate();
+                if (!ws || !ws.fissures || !ws.fissures.data) return null;
+                
+                const fissures = ws.fissures.data.filter(f => !f.hard).slice(0, 6);
+                
+                let message = '🔥 *Разломы Бездны:*\n\n';
+                fissures.forEach(f => {
+                    const tier = translateTier(f.tier);
+                    const mission = translateMission(f.missionType);
+                    message += `*${tier}* — ${mission}\n`;
+                    message += `📍 ${f.location}\n`;
+                    message += `⏱ ${formatTimeLeft(f.end)}\n\n`;
+                });
+                
+                return {
+                    title: '🔥 Разломы Бездны',
+                    description: `Активных: ${ws.fissures.data.length}`,
+                    message: message
+                };
+            }
+            
+            case 'sortie': {
+                const ws = await getWorldstate();
+                if (!ws || !ws.sorties || !ws.sorties.data || ws.sorties.data.length === 0) return null;
+                
+                const sortie = ws.sorties.data[0];
+                
+                let message = '📋 *Вылазка дня*\n\n';
+                message += `👤 Босс: *${sortie.bossName || 'Неизвестен'}*\n`;
+                message += `🎭 Фракция: ${translateFaction(sortie.faction)}\n\n`;
+                
+                if (sortie.missions) {
+                    sortie.missions.forEach((m, i) => {
+                        message += `*${i + 1}. ${translateMission(m.missionType)}*\n`;
+                        message += `📍 ${m.location}\n\n`;
+                    });
+                }
+                
+                return {
+                    title: '📋 Вылазка',
+                    description: `Босс: ${sortie.bossName || 'Неизвестен'}`,
+                    message: message
+                };
+            }
+            
+            case 'baro': {
+                const ws = await getWorldstate();
+                if (!ws || !ws.voidtrader) return null;
+                
+                const baro = ws.voidtrader.data;
+                
+                let message = '🛸 *Баро Ки\'Тиир*\n\n';
+                
+                if (baro.active) {
+                    message += `📍 Локация: *${baro.location}*\n`;
+                    message += `⏱ Улетит через: ${formatTimeLeft(baro.end)}\n`;
+                    message += `📦 Товаров: ${baro.items ? baro.items.length : 0}`;
+                    
+                    return {
+                        title: '🛸 Баро Ки\'Тиир',
+                        description: `Сейчас на ${baro.location}`,
+                        message: message
+                    };
+                } else {
+                    message += `⏱ Прилетит через: *${formatTimeLeft(baro.start)}*\n`;
+                    message += `📍 Реле: ${baro.location || 'Неизвестно'}`;
+                    
+                    return {
+                        title: '🛸 Баро Ки\'Тиир',
+                        description: `Прилетит через ${formatTimeLeft(baro.start)}`,
+                        message: message
+                    };
+                }
+            }
+            
+            case 'invasions': {
+                const ws = await getWorldstate();
+                if (!ws || !ws.invasions || !ws.invasions.data) return null;
+                
+                const invasions = ws.invasions.data.filter(i => !i.completed).slice(0, 5);
+                
+                let message = '⚔️ *Вторжения:*\n\n';
+                invasions.forEach(inv => {
+                    message += `📍 *${inv.location}*\n`;
+                    message += `${translateFaction(inv.attackingFaction)} vs ${translateFaction(inv.defendingFaction)}\n`;
+                    message += `📊 ${Math.abs(inv.progress || 0).toFixed(1)}%\n\n`;
+                });
+                
+                return {
+                    title: '⚔️ Вторжения',
+                    description: `Активных: ${invasions.length}`,
                     message: message
                 };
             }
