@@ -204,7 +204,7 @@ const modNameTranslations = {
     'Umbral Fiber': 'Умбральное волокно',
     'Umbral Intensify': 'Умбральное усиление',
     'Adaptation': 'Адаптация',
-    'Rolling Guard': 'Защита кувырка',
+    'Rolling Guard': 'Защитный Перекат',
     'Natural Talent': 'Природный талант',
     'Constitution': 'Крепость духа',
     'Rage': 'Ярость',
@@ -220,8 +220,8 @@ const modNameTranslations = {
     'Vital Sense': 'Жизненное чутьё',
     'True Steel': 'Истинная сталь',
     'Organ Shatter': 'Разрушитель органов',
-    'Blood Rush': 'Кровавый прилив',
-    'Weeping Wounds': 'Плачущие раны',
+    'Blood Rush': 'Приток Крови',
+    'Weeping Wounds': 'Стенающие Раны',
     'Pistol Gambit': 'Пистолетная авантюра',
     'Target Cracker': 'Разрушитель целей',
     'Blunderbuss': 'Мушкетон',
@@ -267,7 +267,7 @@ const modNameTranslations = {
     // === МОДЫ ДАЛЬНОСТИ ===
     'Reach': 'Досягаемость',
     'Primed Reach': 'Досягаемость Прайм',
-    'Condition Overload': 'Перегрузка состояния',
+    'Condition Overload': 'Избыточное Состояние',
     
     // === НЕКРАМЕХ МОДЫ ===
     'Necramech Pressure Point': 'Болевая Точка Некрамеха',
@@ -283,12 +283,12 @@ const modNameTranslations = {
     'Necramech Deflection': 'Отражение Некрамеха',
     
     // === СЕТОВЫЕ МОДЫ ===
-    'Augur Message': 'Послание Авгура',
-    'Augur Reach': 'Досягаемость Авгура',
-    'Augur Secrets': 'Секреты Авгура',
-    'Augur Accord': 'Согласие Авгура',
-    'Augur Pact': 'Пакт Авгура',
-    'Augur Seeker': 'Искатель Авгура',
+    'Augur Message': 'Послание Предвестника',
+    'Augur Reach': 'Досягаемость Предвестника',
+    'Augur Secrets': 'Секреты Предвестника',
+    'Augur Accord': 'Согласие Предвестника',
+    'Augur Pact': 'Пакт Предвестника',
+    'Augur Seeker': 'Искатель Предвестника',
     'Gladiator Might': 'Мощь Гладиатора',
     'Gladiator Rush': 'Рывок Гладиатора',
     'Gladiator Vice': 'Порок Гладиатора',
@@ -383,7 +383,7 @@ const modNameTranslations = {
     
     // === АУГМЕНТЫ HARROW ===
     'Tribunal': 'Трибунал',
-    'Lasting Covenant': 'Пакт Предвестника',
+    'Lasting Covenant': 'Нерушимый Завет',
     'Warding Thurible': 'Оберегающее Кадило',
     
     // === АУГМЕНТЫ HILDRYN ===

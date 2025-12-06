@@ -1093,34 +1093,22 @@ function formatModInfo(mod) {
     if (mod.drops && mod.drops.length > 0) {
         message += `\n📍 *Где найти:*\n`;
         
-        // Фильтруем только дропы этого мода (по полю type)
-        const relevantDrops = mod.drops.filter(d => d.type === mod.name);
+        // Сортируем по шансу дропа
+        const sortedDrops = [...mod.drops].sort((a, b) => b.chance - a.chance);
+        const topDrops = sortedDrops.slice(0, 5);
         
-        // Сортируем по шансу дропа, топ-3
-        const sortedDrops = [...relevantDrops].sort((a, b) => b.chance - a.chance);
-        const topDrops = sortedDrops.slice(0, 3);
+        topDrops.forEach(drop => {
+            const chance = (drop.chance * 100).toFixed(2);
+            message += `• ${drop.location}: ${chance}%\n`;
+        });
         
-        if (topDrops.length > 0) {
-            topDrops.forEach(drop => {
-                const chance = (drop.chance * 100).toFixed(2);
-                message += `• ${drop.location}: ${chance}%\n`;
-            });
-        } else {
-            message += `Нет информации\n`;
+        if (mod.drops.length > 5) {
+            message += `_...и ещё ${mod.drops.length - 5} локаций_\n`;
         }
     } else {
+        // Если дропов нет
         message += `\n📍 *Где найти:*\n`;
         message += `Нет информации\n`;
-    }
-    
-    // Проверяем есть ли Прайм-версия (только для не-прайм модов)
-    if (!mod.name.includes('Primed')) {
-        const primedName = 'Primed ' + mod.name;
-        const primedMod = modsDB[primedName];
-        if (primedMod) {
-            const primedNameRu = primedMod.nameRu || primedName;
-            message += `\n💎 Есть Прайм-версия: /mod ${primedNameRu}`;
-        }
     }
     
     return message;
@@ -1392,11 +1380,167 @@ function checkSingleCycle(locationKey, now) {
 }
 
 // ========================================================================
+// INLINE MODE - ПОИСК МОДОВ И ВАРФРЕЙМОВ
+// ========================================================================
+
+bot.on('inline_query', async (ctx) => {
+    const query = ctx.inlineQuery.query.trim().toLowerCase();
+    
+    if (!query || query.length < 2) {
+        // Показываем подсказку если запрос слишком короткий
+        return ctx.answerInlineQuery([], {
+            switch_pm_text: '✏️ Введите название мода или варфрейма',
+            switch_pm_parameter: 'help',
+            cache_time: 0
+        });
+    }
+    
+    console.log(`🔍 Inline запрос: "${query}" от ${ctx.from.first_name}`);
+    
+    const results = [];
+    
+    // Поиск модов
+    const foundMods = searchModsInline(query, 25);
+    foundMods.forEach((mod, index) => {
+        const title = mod.nameRu !== mod.name ? `${mod.nameRu} (${mod.name})` : mod.name;
+        const description = getModShortDescription(mod);
+        const messageText = formatModInfo(mod);
+        
+        results.push({
+            type: 'article',
+            id: `mod_${index}_${mod.name.replace(/\s/g, '_')}`,
+            title: `🔧 ${title}`,
+            description: description,
+            input_message_content: {
+                message_text: messageText,
+                parse_mode: 'Markdown',
+                disable_web_page_preview: true
+            }
+        });
+    });
+    
+    // Поиск варфреймов
+    const foundWarframes = searchWarframesInline(query, 10);
+    foundWarframes.forEach((wf, index) => {
+        const info = getWarframeInfoFromDB(wf.key);
+        if (info) {
+            results.push({
+                type: 'article',
+                id: `wf_${index}_${wf.key}`,
+                title: `🤖 ${wf.name}`,
+                description: info.description || 'Варфрейм',
+                input_message_content: {
+                    message_text: formatWarframeInfo(info),
+                    parse_mode: 'Markdown'
+                }
+            });
+        }
+    });
+    
+    try {
+        await ctx.answerInlineQuery(results.slice(0, 50), {
+            cache_time: 300, // Кешировать 5 минут
+            is_personal: false
+        });
+    } catch (error) {
+        console.error('❌ Ошибка inline:', error.message);
+    }
+});
+
+// Функция поиска модов для inline (возвращает массив)
+function searchModsInline(query, limit = 25) {
+    const queryLower = query.toLowerCase();
+    const results = [];
+    const seen = new Set();
+    
+    // Сначала точные совпадения
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (seen.has(mod.name)) continue;
+        if (key.toLowerCase() === queryLower || mod.name.toLowerCase() === queryLower) {
+            results.push(mod);
+            seen.add(mod.name);
+        }
+    }
+    
+    // Потом по началу названия
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (seen.has(mod.name)) continue;
+        if (key.toLowerCase().startsWith(queryLower) || 
+            mod.name.toLowerCase().startsWith(queryLower) ||
+            (mod.nameRu && mod.nameRu.toLowerCase().startsWith(queryLower))) {
+            results.push(mod);
+            seen.add(mod.name);
+        }
+        if (results.length >= limit) break;
+    }
+    
+    // Потом по вхождению
+    if (results.length < limit) {
+        for (const [key, mod] of Object.entries(modsDB)) {
+            if (seen.has(mod.name)) continue;
+            if (key.toLowerCase().includes(queryLower) || 
+                mod.name.toLowerCase().includes(queryLower) ||
+                (mod.nameRu && mod.nameRu.toLowerCase().includes(queryLower))) {
+                results.push(mod);
+                seen.add(mod.name);
+            }
+            if (results.length >= limit) break;
+        }
+    }
+    
+    return results;
+}
+
+// Функция поиска варфреймов для inline
+function searchWarframesInline(query, limit = 10) {
+    const queryLower = query.toLowerCase();
+    const results = [];
+    
+    // Поиск в базе способностей (там есть названия варфреймов)
+    for (const [key, wf] of Object.entries(abilitiesDB)) {
+        const name = wf.name || key;
+        if (name.toLowerCase().includes(queryLower) || key.toLowerCase().includes(queryLower)) {
+            results.push({ key, name });
+        }
+        if (results.length >= limit) break;
+    }
+    
+    return results;
+}
+
+// Получить информацию о варфрейме из базы
+function getWarframeInfoFromDB(key) {
+    const wf = abilitiesDB[key];
+    if (!wf) return null;
+    
+    return {
+        title: wf.name || key,
+        description: wf.description || '',
+        abilities: wf.abilities || [],
+        passive: wf.passive || ''
+    };
+}
+
+// Краткое описание мода для inline
+function getModShortDescription(mod) {
+    let desc = mod.typeRu || mod.type || '';
+    
+    if (mod.levelStats && mod.levelStats.length > 0) {
+        const maxStats = mod.levelStats[mod.levelStats.length - 1].stats;
+        if (maxStats && maxStats[0]) {
+            desc += ` • ${maxStats[0]}`;
+        }
+    }
+    
+    return desc.substring(0, 100);
+}
+
+// ========================================================================
 // ЗАПУСК БОТА
 // ========================================================================
 
 console.log('='.repeat(60));
-console.log('🤖 WARFRAME BOT V3 FINAL (LOCAL)');
+console.log('🤖 WARFRAME BOT V3 FINAL (LOCAL + INLINE)');
 console.log('='.repeat(60));
 console.log('✓ Бот инициализирован');
 console.log('✓ Локальные расчёты циклов');
