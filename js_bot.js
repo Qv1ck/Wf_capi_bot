@@ -1422,19 +1422,19 @@ bot.on('inline_query', async (ctx) => {
     // Поиск варфреймов
     const foundWarframes = searchWarframesInline(query, 10);
     foundWarframes.forEach((wf, index) => {
-        const info = getWarframeInfoFromDB(wf.key);
-        if (info) {
-            results.push({
-                type: 'article',
-                id: `wf_${index}_${wf.key}`,
-                title: `🤖 ${wf.name}`,
-                description: info.description || 'Варфрейм',
-                input_message_content: {
-                    message_text: formatWarframeInfo(info),
-                    parse_mode: 'Markdown'
-                }
-            });
-        }
+        const messageText = formatWarframeInfoInline(wf);
+        const abilitiesPreview = wf.abilities ? wf.abilities.slice(0, 2).join(', ') + '...' : '';
+        
+        results.push({
+            type: 'article',
+            id: `wf_${index}_${wf.name.replace(/\s/g, '_')}`,
+            title: `🤖 ${wf.name}`,
+            description: abilitiesPreview,
+            input_message_content: {
+                message_text: messageText,
+                parse_mode: 'Markdown'
+            }
+        });
     });
     
     try {
@@ -1496,11 +1496,13 @@ function searchWarframesInline(query, limit = 10) {
     const queryLower = query.toLowerCase();
     const results = [];
     
-    // Поиск в базе способностей (там есть названия варфреймов)
-    for (const [key, wf] of Object.entries(abilitiesDB)) {
-        const name = wf.name || key;
-        if (name.toLowerCase().includes(queryLower) || key.toLowerCase().includes(queryLower)) {
-            results.push({ key, name });
+    // Поиск в базе способностей
+    for (const [name, abilities] of Object.entries(abilitiesDB)) {
+        if (name.toLowerCase().includes(queryLower)) {
+            results.push({ 
+                name: name, 
+                abilities: abilities 
+            });
         }
         if (results.length >= limit) break;
     }
@@ -1509,16 +1511,27 @@ function searchWarframesInline(query, limit = 10) {
 }
 
 // Получить информацию о варфрейме из базы
-function getWarframeInfoFromDB(key) {
-    const wf = abilitiesDB[key];
-    if (!wf) return null;
+function getWarframeInfoFromDB(wfData) {
+    if (!wfData) return null;
     
     return {
-        title: wf.name || key,
-        description: wf.description || '',
-        abilities: wf.abilities || [],
-        passive: wf.passive || ''
+        title: wfData.name,
+        abilities: wfData.abilities || []
     };
+}
+
+// Форматирование информации о варфрейме для inline
+function formatWarframeInfoInline(wfData) {
+    let message = `🤖 *${wfData.name}*\n\n`;
+    message += `⚡ *Способности:*\n`;
+    
+    if (wfData.abilities && wfData.abilities.length > 0) {
+        wfData.abilities.forEach((ability, index) => {
+            message += `${index + 1}. ${ability}\n`;
+        });
+    }
+    
+    return message;
 }
 
 // Краткое описание мода для inline
