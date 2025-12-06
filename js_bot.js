@@ -1386,13 +1386,9 @@ function checkSingleCycle(locationKey, now) {
 bot.on('inline_query', async (ctx) => {
     const query = ctx.inlineQuery.query.trim().toLowerCase();
     
+    // Не отвечаем на пустые/короткие запросы - окно не появится
     if (!query || query.length < 2) {
-        // Показываем подсказку если запрос слишком короткий
-        return ctx.answerInlineQuery([], {
-            switch_pm_text: '✏️ Введите название мода или варфрейма',
-            switch_pm_parameter: 'help',
-            cache_time: 0
-        });
+        return;
     }
     
     console.log(`🔍 Inline запрос: "${query}" от ${ctx.from.first_name}`);
@@ -1424,11 +1420,12 @@ bot.on('inline_query', async (ctx) => {
     foundWarframes.forEach((wf, index) => {
         const messageText = formatWarframeInfoInline(wf);
         const abilitiesPreview = wf.abilities ? wf.abilities.slice(0, 2).join(', ') + '...' : '';
+        const displayName = wf.nameRu ? `${wf.nameRu} (${wf.name})` : wf.name;
         
         results.push({
             type: 'article',
             id: `wf_${index}_${wf.name.replace(/\s/g, '_')}`,
-            title: `🤖 ${wf.name}`,
+            title: `🤖 ${displayName}`,
             description: abilitiesPreview,
             input_message_content: {
                 message_text: messageText,
@@ -1495,14 +1492,41 @@ function searchModsInline(query, limit = 25) {
 function searchWarframesInline(query, limit = 10) {
     const queryLower = query.toLowerCase();
     const results = [];
+    const seen = new Set();
     
-    // Поиск в базе способностей
-    for (const [name, abilities] of Object.entries(abilitiesDB)) {
-        if (name.toLowerCase().includes(queryLower)) {
+    // Сначала ищем по алиасам (русские названия)
+    for (const [englishName, aliases] of Object.entries(nameAliasesDB)) {
+        if (seen.has(englishName)) continue;
+        
+        // Проверяем алиасы
+        const matchedAlias = aliases.find(alias => 
+            alias.toLowerCase().includes(queryLower) || 
+            alias.toLowerCase().startsWith(queryLower)
+        );
+        
+        if (matchedAlias && abilitiesDB[englishName]) {
             results.push({ 
-                name: name, 
+                name: englishName,
+                nameRu: aliases[0], // Первый алиас - основное русское название
+                abilities: abilitiesDB[englishName]
+            });
+            seen.add(englishName);
+        }
+        if (results.length >= limit) break;
+    }
+    
+    // Потом ищем по английским названиям
+    for (const [name, abilities] of Object.entries(abilitiesDB)) {
+        if (seen.has(name)) continue;
+        
+        if (name.toLowerCase().includes(queryLower)) {
+            const aliases = nameAliasesDB[name];
+            results.push({ 
+                name: name,
+                nameRu: aliases ? aliases[0] : null,
                 abilities: abilities 
             });
+            seen.add(name);
         }
         if (results.length >= limit) break;
     }
@@ -1522,7 +1546,12 @@ function getWarframeInfoFromDB(wfData) {
 
 // Форматирование информации о варфрейме для inline
 function formatWarframeInfoInline(wfData) {
-    let message = `🤖 *${wfData.name}*\n\n`;
+    let title = wfData.name;
+    if (wfData.nameRu) {
+        title = `${wfData.nameRu} (${wfData.name})`;
+    }
+    
+    let message = `🤖 *${title}*\n\n`;
     message += `⚡ *Способности:*\n`;
     
     if (wfData.abilities && wfData.abilities.length > 0) {
