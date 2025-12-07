@@ -1298,9 +1298,14 @@ bot.command(['baro', 'баро', 'торговец'], async (ctx) => {
 function makeInvasionProgressBar(score, endScore) {
     const totalBlocks = 10;
     // score: отрицательный = побеждает defender, положительный = побеждает attacker
-    // Прогресс от -endScore до +endScore
-    const progress = (score + endScore) / (2 * endScore); // 0 = defender wins, 1 = attacker wins
-    const attackerBlocks = Math.round(progress * totalBlocks);
+    // endScore — сколько нужно для победы
+    // Показываем прогресс к победе каждой стороны
+    
+    // Нормализуем: -1 (defender победил) до +1 (attacker победил)
+    const normalized = score / endScore; // от -1 до +1
+    
+    // Конвертируем в 0-10: 0 = defender победил, 10 = attacker победил, 5 = равенство
+    const attackerBlocks = Math.round((normalized + 1) * 5);
     
     let bar = '';
     for (let i = 0; i < totalBlocks; i++) {
@@ -1380,7 +1385,7 @@ bot.command(['invasions', 'invasion', 'вторжения'], async (ctx) => {
             return ctx.reply('⚔️ Нет активных вторжений.');
         }
         
-        let message = '💥 *Вторжения:*\n\n';
+        let message = '̿̿ ̿̿ ̿̿ ̿\'̿\'\\̵͇̿̿\\з= ( ▀ ͜͞ʖ▀) =ε/̵͇̿̿/\'̿\'̿ ̿ ̿̿ ̿̿ ̿̿ *Вторжения:*\n\n';
         
         invasions.slice(0, 6).forEach(inv => {
             // Даты
