@@ -77,17 +77,119 @@ const TIER_NAMES = {
 const MISSION_TYPES = {
     'Exterminate': 'Истребление', 'Survival': 'Выживание', 'Defense': 'Защита',
     'Capture': 'Захват', 'Rescue': 'Спасение', 'Sabotage': 'Саботаж',
-    'Mobile Defense': 'Мобильная Защита', 'Excavation': 'Раскопки',
+    'Mobile Defense': 'Мобильная защита', 'Excavation': 'Раскопки',
     'Interception': 'Перехват', 'Spy': 'Шпионаж', 'Assassination': 'Убийство',
     'Disruption': 'Сбой', 'Void Cascade': 'Каскад Бездны', 'Void Flood': 'Потоп Бездны',
     'Void Armageddon': 'Армагеддон Бездны', 'Defection': 'Дезертирство',
-    'Hive': 'Улей', 'Hijack': 'Угон', 'Infested Salvage': 'Заражённый Улов'
+    'Hive': 'Улей', 'Hijack': 'Угон', 'Infested Salvage': 'Заражённый улов',
+    'Skirmish': 'Стычка', 'Volatile': 'Нестабильность', 'Orphix': 'Орфикс'
 };
 
 const FACTION_NAMES = {
     'Grineer': 'Гринир', 'Corpus': 'Корпус', 'Infested': 'Заражённые',
-    'Orokin': 'Орокин', 'Corrupted': 'Осквернённые', 'Crossfire': 'Перестрелка'
+    'Infestation': 'Заражённые', 'Orokin': 'Орокин', 'Corrupted': 'Осквернённые', 
+    'Crossfire': 'Перестрелка'
 };
+
+const PLANET_NAMES = {
+    'Earth': 'Земля', 'Venus': 'Венера', 'Mercury': 'Меркурий', 'Mars': 'Марс',
+    'Phobos': 'Фобос', 'Deimos': 'Деймос', 'Ceres': 'Церера', 'Jupiter': 'Юпитер',
+    'Europa': 'Европа', 'Saturn': 'Сатурн', 'Uranus': 'Уран', 'Neptune': 'Нептун',
+    'Pluto': 'Плутон', 'Sedna': 'Седна', 'Eris': 'Эрида', 'Void': 'Бездна',
+    'Lua': 'Луа', 'Kuva Fortress': 'Крепость Кувы', 'Zariman': 'Зариман',
+    'Derelict': 'Покинутый корабль'
+};
+
+const BOSS_NAMES = {
+    'Corrupted Vor': 'Осквернённый Вор', 'Vor': 'Вор', 'Lech Kril': 'Лек Крил',
+    'Vay Hek': 'Вэй Хек', 'Tyl Regor': 'Тил Регор', 'Sargas Ruk': 'Саргас Рук',
+    'Kela De Thaym': 'Кела Де Тейм', 'Alad V': 'Алад V', 'Mutalist Alad V': 'Муталист Алад V',
+    'Ambulas': 'Амбулас', 'Raptor': 'Раптор', 'Hyena Pack': 'Стая гиен',
+    'Jackal': 'Шакал', 'Phorid': 'Форид', 'Lephantis': 'Лефантис',
+    'Ropalolyst': 'Ропалолист', 'Exploiter Orb': 'Эксплоитер', 'Profit-Taker': 'Грабитель',
+    'Eidolon Teralyst': 'Терралист', 'Eidolon Gantulyst': 'Гантулист', 
+    'Eidolon Hydrolyst': 'Гидролист', 'Archon Amar': 'Архонт Амар',
+    'Archon Boreal': 'Архонт Бореал', 'Archon Nira': 'Архонт Нира'
+};
+
+const MODIFIER_NAMES = {
+    'Radiation hazard': 'Радиационная опасность',
+    'Augmented enemy armor': 'Усиленная броня врагов',
+    'Augmented Enemy Armor': 'Усиленная броня врагов',
+    'Elemental buffs (Corrosive)': 'Элементальный бафф (Коррозия)',
+    'Elemental buffs (Radiation)': 'Элементальный бафф (Радиация)',
+    'Elemental buffs (Magnetic)': 'Элементальный бафф (Магнит)',
+    'Elemental buffs (Viral)': 'Элементальный бафф (Вирус)',
+    'Elemental buffs (Gas)': 'Элементальный бафф (Газ)',
+    'Elemental buffs (Blast)': 'Элементальный бафф (Взрыв)',
+    'Energy Reduction': 'Снижение энергии',
+    'Eximus Stronghold': 'Оплот Экзимусов',
+    'Physical Enhancement': 'Физическое усиление',
+    'Enemy Elemental Enhancement': 'Элементальное усиление врагов',
+    'Weapon restriction (Rifle Only)': 'Ограничение: только винтовки',
+    'Weapon restriction (Shotgun Only)': 'Ограничение: только дробовики',
+    'Weapon restriction (Secondary Only)': 'Ограничение: только пистолеты',
+    'Weapon restriction (Melee Only)': 'Ограничение: только ближний бой',
+    'Weapon restriction (Bow Only)': 'Ограничение: только луки',
+    'Weapon restriction (Sniper Only)': 'Ограничение: только снайперки'
+};
+
+const REWARD_NAMES = {
+    'Fieldron': 'Филдрон', 'Detonite Injector': 'Инжектор детонита',
+    'Mutagen Mass': 'Масса мутагена', 'Mutalist Alad V Nav Coordinate': 'Координаты Муталист Алада V',
+    'Orokin Catalyst Blueprint': 'Чертёж катализатора Орокин',
+    'Orokin Reactor Blueprint': 'Чертёж реактора Орокин',
+    'Forma Blueprint': 'Чертёж Формы', 'Exilus Adapter': 'Адаптер Эксилус',
+    // Оружие Вандал/Призрак
+    'Wraith Twin Vipers': 'Парные Гадюки Призрак',
+    'Latron Wraith': 'Латрон Призрак', 'Latron Wraith Barrel': 'Латрон Призрак: Ствол',
+    'Latron Wraith Stock': 'Латрон Призрак: Приклад', 'Latron Wraith Receiver': 'Латрон Призрак: Ресивер',
+    'Latron Wraith Blueprint': 'Латрон Призрак: Чертёж',
+    'Strun Wraith': 'Струн Призрак', 'Strun Wraith Barrel': 'Струн Призрак: Ствол',
+    'Strun Wraith Stock': 'Струн Призрак: Приклад', 'Strun Wraith Receiver': 'Струн Призрак: Ресивер',
+    'Strun Wraith Blueprint': 'Струн Призрак: Чертёж',
+    'Karak Wraith': 'Карак Призрак', 'Karak Wraith Barrel': 'Карак Призрак: Ствол',
+    'Karak Wraith Stock': 'Карак Призрак: Приклад', 'Karak Wraith Receiver': 'Карак Призрак: Ресивер',
+    'Karak Wraith Blueprint': 'Карак Призрак: Чертёж',
+    'Snipetron Vandal': 'Снайптрон Вандал', 'Snipetron Vandal Barrel': 'Снайптрон Вандал: Ствол',
+    'Snipetron Vandal Stock': 'Снайптрон Вандал: Приклад', 'Snipetron Vandal Receiver': 'Снайптрон Вандал: Ресивер',
+    'Snipetron Vandal Blueprint': 'Снайптрон Вандал: Чертёж',
+    'Dera Vandal': 'Дера Вандал', 'Dera Vandal Barrel': 'Дера Вандал: Ствол',
+    'Dera Vandal Stock': 'Дера Вандал: Приклад', 'Dera Vandal Receiver': 'Дера Вандал: Ресивер',
+    'Dera Vandal Blueprint': 'Дера Вандал: Чертёж',
+    'Sheev': 'Шив', 'Sheev Blade': 'Шив: Лезвие', 'Sheev Heatsink': 'Шив: Радиатор',
+    'Sheev Hilt': 'Шив: Рукоять', 'Sheev Blueprint': 'Шив: Чертёж',
+    'Twin Vipers Wraith': 'Парные Гадюки Призрак', 'Twin Vipers Wraith Barrel': 'Парные Гадюки Призрак: Ствол',
+    'Twin Vipers Wraith Receiver': 'Парные Гадюки Призрак: Ресивер', 
+    'Twin Vipers Wraith Blueprint': 'Парные Гадюки Призрак: Чертёж'
+};
+
+function translatePlanet(location) {
+    // location формат: "Planet/Node" например "Earth/Mantle"
+    const parts = location.split('/');
+    if (parts.length === 2) {
+        const planet = PLANET_NAMES[parts[0]] || parts[0];
+        return `${planet}/${parts[1]}`;
+    }
+    return location;
+}
+
+function translatePlanetOnly(location) {
+    const parts = location.split('/');
+    return PLANET_NAMES[parts[0]] || parts[0];
+}
+
+function translateBoss(boss) {
+    return BOSS_NAMES[boss] || boss;
+}
+
+function translateModifier(mod) {
+    return MODIFIER_NAMES[mod] || mod;
+}
+
+function translateReward(reward) {
+    return REWARD_NAMES[reward] || reward;
+}
 
 function translateMission(type) {
     return MISSION_TYPES[type] || type;
@@ -1085,8 +1187,9 @@ bot.command(['fissures', 'fissure', 'разломы'], async (ctx) => {
                 message += `*${translateTier(tier)}:*\n`;
                 byTier[tier].slice(0, 3).forEach(f => {
                     const mission = translateMission(f.missionType);
+                    const location = translatePlanet(f.location);
                     const timeLeft = formatTimeLeft(f.end);
-                    message += `• ${mission} — ${f.location}\n`;
+                    message += `• ${mission} — ${location}\n`;
                     message += `  ⏱ ${timeLeft}\n`;
                 });
                 message += '\n';
@@ -1117,7 +1220,7 @@ bot.command(['sortie', 'вылазка', 'вылазки'], async (ctx) => {
         const sortie = ws.sorties.data[0];
         
         let message = '📋 *Вылазка дня*\n\n';
-        message += `👤 Босс: *${sortie.bossName || 'Неизвестен'}*\n`;
+        message += `👤 Босс: *${translateBoss(sortie.bossName) || 'Неизвестен'}*\n`;
         message += `🎭 Фракция: ${translateFaction(sortie.faction)}\n`;
         message += `⏱ До конца: ${formatTimeLeft(sortie.end)}\n\n`;
         
@@ -1125,10 +1228,11 @@ bot.command(['sortie', 'вылазка', 'вылазки'], async (ctx) => {
             message += '*Миссии:*\n';
             sortie.missions.forEach((m, i) => {
                 const mission = translateMission(m.missionType);
+                const location = translatePlanet(m.location);
                 message += `\n*${i + 1}. ${mission}*\n`;
-                message += `📍 ${m.location}\n`;
+                message += `📍 ${location}\n`;
                 if (m.modifier) {
-                    message += `⚠️ ${m.modifier}\n`;
+                    message += `⚠️ ${translateModifier(m.modifier)}\n`;
                 }
             });
         }
@@ -1190,6 +1294,73 @@ bot.command(['baro', 'баро', 'торговец'], async (ctx) => {
 // КОМАНДА /invasions - ВТОРЖЕНИЯ
 // ========================================================================
 
+// Функция создания прогресс-бара для вторжений
+function makeInvasionProgressBar(score, endScore) {
+    const totalBlocks = 20;
+    // score: отрицательный = побеждает defender, положительный = побеждает attacker
+    // Прогресс от -endScore до +endScore
+    const progress = (score + endScore) / (2 * endScore); // 0 = defender wins, 1 = attacker wins
+    const filledBlocks = Math.round(progress * totalBlocks);
+    
+    let bar = '';
+    for (let i = 0; i < totalBlocks; i++) {
+        bar += i < filledBlocks ? '■' : '□';
+    }
+    return bar;
+}
+
+// Функция форматирования даты
+function formatInvasionDate(timestamp) {
+    const date = new Date(timestamp * 1000);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const mins = String(date.getMinutes()).padStart(2, '0');
+    return `${day}.${month} ${hours}:${mins}`;
+}
+
+// Функция оценки времени окончания вторжения
+function estimateInvasionEnd(inv) {
+    if (!inv.scoreHistory || inv.scoreHistory.length < 2) {
+        return null;
+    }
+    
+    // Берём последние точки для оценки скорости
+    const history = inv.scoreHistory.filter(h => h[0] > 0); // убираем отрицательные таймстемпы
+    if (history.length < 2) return null;
+    
+    const last = history[history.length - 1];
+    const prev = history[Math.max(0, history.length - 10)]; // 10 точек назад для усреднения
+    
+    const timeDiff = last[0] - prev[0];
+    const scoreDiff = last[1] - prev[1];
+    
+    if (timeDiff <= 0 || scoreDiff === 0) return null;
+    
+    const scorePerSec = scoreDiff / timeDiff;
+    const currentScore = inv.score;
+    const endScore = inv.endScore;
+    
+    // Определяем сколько осталось до победы одной из сторон
+    let remainingScore;
+    if (scorePerSec > 0) {
+        // Attacker побеждает
+        remainingScore = endScore - currentScore;
+    } else {
+        // Defender побеждает
+        remainingScore = endScore + currentScore;
+    }
+    
+    const remainingTime = Math.abs(remainingScore / scorePerSec);
+    return Math.floor(Date.now() / 1000 + remainingTime);
+}
+
+// Функция получения типа миссии из location
+function getInvasionMissionType(location) {
+    // Можно добавить маппинг нод к типам миссий, пока используем API данные если есть
+    return null;
+}
+
 bot.command(['invasions', 'invasion', 'вторжения'], async (ctx) => {
     console.log('⚔️ Команда /invasions вызвана');
     
@@ -1200,27 +1371,53 @@ bot.command(['invasions', 'invasion', 'вторжения'], async (ctx) => {
             return ctx.reply('❌ Не удалось получить данные о вторжениях.');
         }
         
-        const invasions = ws.invasions.data.filter(i => !i.completed);
+        const invasions = ws.invasions.data.filter(i => {
+            // Фильтруем завершённые (score достиг endScore)
+            return Math.abs(i.score) < i.endScore;
+        });
         
         if (invasions.length === 0) {
             return ctx.reply('⚔️ Нет активных вторжений.');
         }
         
-        let message = '⚔️ *Вторжения:*\n\n';
+        let message = '💥 *Вторжения:*\n\n';
         
-        invasions.slice(0, 8).forEach(inv => {
-            message += `📍 *${inv.location}*\n`;
-            message += `${translateFaction(inv.attackingFaction)} vs ${translateFaction(inv.defendingFaction)}\n`;
+        invasions.slice(0, 6).forEach(inv => {
+            // Даты
+            const startDate = formatInvasionDate(inv.start);
+            const endEstimate = estimateInvasionEnd(inv);
+            const endDate = endEstimate ? formatInvasionDate(endEstimate) : '??:??';
             
+            message += `${startDate} ~ ${endDate}\n`;
+            
+            // Прогресс-бар
+            const progressBar = makeInvasionProgressBar(inv.score, inv.endScore);
+            message += `${progressBar}\n`;
+            
+            // Награды
             const rewards = [];
-            if (inv.attackerReward) rewards.push(inv.attackerReward);
-            if (inv.defenderReward) rewards.push(inv.defenderReward);
-            if (rewards.length > 0) {
-                message += `🎁 ${rewards.join(' | ')}\n`;
+            if (inv.rewardsAttacker && inv.rewardsAttacker.items) {
+                inv.rewardsAttacker.items.forEach(item => {
+                    const name = translateReward(item.name);
+                    rewards.push(item.count > 1 ? `${name} x${item.count}` : name);
+                });
+            }
+            if (inv.rewardsDefender && inv.rewardsDefender.items) {
+                inv.rewardsDefender.items.forEach(item => {
+                    const name = translateReward(item.name);
+                    rewards.push(item.count > 1 ? `${name} x${item.count}` : name);
+                });
             }
             
-            const progress = Math.abs(inv.progress || 0).toFixed(1);
-            message += `📊 ${progress}%\n\n`;
+            if (rewards.length > 0) {
+                message += `${rewards.join(' / ')}\n`;
+            }
+            
+            // Локация и прогресс
+            const planet = translatePlanetOnly(inv.location);
+            const progress = Math.abs(inv.score / inv.endScore * 100).toFixed(2);
+            message += `${planet} (${progress}%)\n`;
+            message += `─────────────────────────\n`;
         });
         
         await ctx.replyWithMarkdown(message);
