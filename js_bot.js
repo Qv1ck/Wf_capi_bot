@@ -462,160 +462,121 @@ function getEarthCycle() {
 }
 
 // ========================================================================
-// ИЗВЕСТНЫЕ ТОЧКИ ОТСЧЁТА ДЛЯ ЦИКЛОВ (обновлено 30.11.2025)
+// ЦИКЛЫ МИРОВ - ДАННЫЕ ИЗ API + FALLBACK
 // ========================================================================
 
-// ЦЕТУС: в 20:51 по Москве (17:51 UTC) 30.11.2025 закончится ДЕНЬ, начнётся НОЧЬ
-const CETUS_KNOWN_DATE = new Date('2025-11-30T17:51:00Z');
-const CETUS_KNOWN_PHASE = 'night'; // что начинается после этого времени
-const CETUS_DAY_DURATION = 100;    // 100 минут день
-const CETUS_NIGHT_DURATION = 50;   // 50 минут ночь
-const CETUS_CYCLE_DURATION = CETUS_DAY_DURATION + CETUS_NIGHT_DURATION; // 150 минут
+// Константы из API tenno.tools (fallback если API недоступен)
+const CYCLE_DEFAULTS = {
+    cetus: { start: 1509371722, length: 8998.8748, dayStart: 2249.7187, dayEnd: 8248.9686 },
+    fortuna: { start: 1542131224, length: 1600, dayStart: 800, dayEnd: 1200 },
+    earth: { start: 1509371722, length: 8998.8748, dayStart: 2249.7187, dayEnd: 8248.9686 }
+};
 
-// ФОРТУНА: в 19:39 по Москве (16:39 UTC) 30.11.2025 закончится ХОЛОД, начнётся ТЕПЛО
-const FORTUNA_KNOWN_DATE = new Date('2025-11-30T16:39:00Z');
-const FORTUNA_KNOWN_PHASE = 'warm'; // что начинается после этого времени
-const FORTUNA_WARM_DURATION = 6 + 40/60;   // 6 минут 40 секунд
-const FORTUNA_COLD_DURATION = 13 + 20/60;  // 13 минут 20 секунд
-const FORTUNA_CYCLE_DURATION = FORTUNA_WARM_DURATION + FORTUNA_COLD_DURATION; // 20 минут
+// Кэш данных о циклах из API
+let cyclesDataCache = null;
+let cyclesDataCacheTime = 0;
 
-// ДЕЙМОС: в 07:51 по Москве (04:51 UTC) 02.12.2025 закончится ФЭЗ, начнётся ВОУМ
-const DEIMOS_KNOWN_DATE = new Date('2025-12-02T04:51:00Z');
-const DEIMOS_KNOWN_PHASE = 'vome'; // что начинается после этого времени
-const DEIMOS_FASS_DURATION = 150;  // 150 минут Фэз
-const DEIMOS_VOME_DURATION = 50;   // 50 минут Воум
-const DEIMOS_CYCLE_DURATION = DEIMOS_FASS_DURATION + DEIMOS_VOME_DURATION; // 200 минут
+// Рассчитать статус цикла по данным API
+function calculateCycleFromAPI(cycleData) {
+    const now = Math.floor(Date.now() / 1000);
+    const elapsed = now - cycleData.start;
+    const posInCycle = ((elapsed % cycleData.length) + cycleData.length) % cycleData.length;
+    
+    // "День" = между dayStart и dayEnd
+    const isDay = posInCycle >= cycleData.dayStart && posInCycle < cycleData.dayEnd;
+    
+    let timeLeftSec;
+    if (isDay) {
+        timeLeftSec = cycleData.dayEnd - posInCycle;
+    } else if (posInCycle < cycleData.dayStart) {
+        timeLeftSec = cycleData.dayStart - posInCycle;
+    } else {
+        timeLeftSec = (cycleData.length - posInCycle) + cycleData.dayStart;
+    }
+    
+    return { isDay, timeLeftSec };
+}
 
-// ЗЕМЛЯ: день 4 часа, ночь 4 часа = 8 часов цикл
-// Сейчас ДЕНЬ, смена через 21м 58с = в 07:01 Москва (04:01 UTC)
-const EARTH_KNOWN_DATE = new Date('2025-12-02T04:01:00Z');
-const EARTH_KNOWN_PHASE = 'night'; // что начинается после этого времени
-const EARTH_DAY_DURATION = 240;    // 4 часа = 240 минут день
-const EARTH_NIGHT_DURATION = 240;  // 4 часа = 240 минут ночь
-const EARTH_CYCLE_DURATION = EARTH_DAY_DURATION + EARTH_NIGHT_DURATION; // 480 минут
-
-// ========================================================================
-// ФУНКЦИЯ РАСЧЁТА ЦИКЛОВ
-// ========================================================================
+function formatCycleTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return h > 0 ? `${h}ч ${m}м` : `${m}м`;
+}
 
 function getCycleStatus(locationKey) {
-    // ЦЕТУС (Равнины Эйдолона)
+    // ЦЕТУС
     if (locationKey === 'Равнины Эйдолона' || locationKey === 'Цетус') {
-        const now = new Date();
-        const diffTime = now - CETUS_KNOWN_DATE;
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
-        
-        const minutesInCycle = ((diffMinutes % CETUS_CYCLE_DURATION) + CETUS_CYCLE_DURATION) % CETUS_CYCLE_DURATION;
-        
-        let isDay, timeLeftMinutes;
-        
-        if (CETUS_KNOWN_PHASE === 'night') {
-            if (minutesInCycle < CETUS_NIGHT_DURATION) {
-                // Сейчас НОЧЬ
-                isDay = false;
-                timeLeftMinutes = CETUS_NIGHT_DURATION - minutesInCycle;
-            } else {
-                // Сейчас ДЕНЬ
-                isDay = true;
-                timeLeftMinutes = CETUS_CYCLE_DURATION - minutesInCycle;
-            }
-        }
-        
+        const data = CYCLE_DEFAULTS.cetus;
+        const { isDay, timeLeftSec } = calculateCycleFromAPI(data);
         return {
             phase: isDay ? 'День' : 'Ночь',
-            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            timeLeft: formatCycleTime(timeLeftSec),
             isPhase1: isDay
         };
     }
     
-    // ФОРТУНА
+    // ФОРТУНА (инвертировано: day в API = холод)
     if (locationKey === 'Фортуна') {
-        const now = new Date();
-        const diffTime = now - FORTUNA_KNOWN_DATE;
-        const diffMinutes = diffTime / (1000 * 60); // с дробной частью!
-        
-        const minutesInCycle = ((diffMinutes % FORTUNA_CYCLE_DURATION) + FORTUNA_CYCLE_DURATION) % FORTUNA_CYCLE_DURATION;
-        
-        let isWarm, timeLeftMinutes;
-        
-        if (FORTUNA_KNOWN_PHASE === 'warm') {
-            if (minutesInCycle < FORTUNA_WARM_DURATION) {
-                // Сейчас ТЕПЛО
-                isWarm = true;
-                timeLeftMinutes = FORTUNA_WARM_DURATION - minutesInCycle;
-            } else {
-                // Сейчас ХОЛОД
-                isWarm = false;
-                timeLeftMinutes = FORTUNA_CYCLE_DURATION - minutesInCycle;
-            }
-        }
-        
+        const data = CYCLE_DEFAULTS.fortuna;
+        const { isDay, timeLeftSec } = calculateCycleFromAPI(data);
         return {
-            phase: isWarm ? 'Тепло' : 'Холод',
-            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
-            isPhase1: isWarm
+            phase: isDay ? 'Холод' : 'Тепло',
+            timeLeft: formatCycleTime(timeLeftSec),
+            isPhase1: !isDay
         };
     }
     
-    // ДЕЙМОС (Камбионский Дрейф)
+    // ДЕЙМОС (100 мин Фасс + 50 мин Вом)
     if (locationKey === 'Камбионский Дрейф' || locationKey === 'Деймос') {
-        const now = new Date();
-        const diffTime = now - DEIMOS_KNOWN_DATE;
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const DEIMOS_START = 1509371722;
+        const DEIMOS_LENGTH = 9000; // 150 минут
+        const DEIMOS_FASS_END = 6000; // 100 минут Фасс
         
-        const minutesInCycle = ((diffMinutes % DEIMOS_CYCLE_DURATION) + DEIMOS_CYCLE_DURATION) % DEIMOS_CYCLE_DURATION;
+        const now = Math.floor(Date.now() / 1000);
+        const elapsed = now - DEIMOS_START;
+        const pos = ((elapsed % DEIMOS_LENGTH) + DEIMOS_LENGTH) % DEIMOS_LENGTH;
+        const isFass = pos < DEIMOS_FASS_END;
         
-        let isFass, timeLeftMinutes;
-        
-        if (DEIMOS_KNOWN_PHASE === 'vome') {
-            if (minutesInCycle < DEIMOS_VOME_DURATION) {
-                // Сейчас ВОУМ
-                isFass = false;
-                timeLeftMinutes = DEIMOS_VOME_DURATION - minutesInCycle;
-            } else {
-                // Сейчас ФЭЗ
-                isFass = true;
-                timeLeftMinutes = DEIMOS_CYCLE_DURATION - minutesInCycle;
-            }
-        }
+        const timeLeftSec = isFass ? (DEIMOS_FASS_END - pos) : (DEIMOS_LENGTH - pos);
         
         return {
-            phase: isFass ? 'Фэз' : 'Воум',
-            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            phase: isFass ? 'Фасс' : 'Вом',
+            timeLeft: formatCycleTime(timeLeftSec),
             isPhase1: isFass
+        };
+    }
+    
+    // ЗАРУМАН (90 мин каждая фаза)
+    if (locationKey === 'Заруман') {
+        const ZARIMAN_START = 1650456000;
+        const ZARIMAN_LENGTH = 10800; // 3 часа
+        const ZARIMAN_CORPUS_END = 5400; // 1.5 часа
+        
+        const now = Math.floor(Date.now() / 1000);
+        const elapsed = now - ZARIMAN_START;
+        const pos = ((elapsed % ZARIMAN_LENGTH) + ZARIMAN_LENGTH) % ZARIMAN_LENGTH;
+        const isCorpus = pos < ZARIMAN_CORPUS_END;
+        
+        const timeLeftSec = isCorpus ? (ZARIMAN_CORPUS_END - pos) : (ZARIMAN_LENGTH - pos);
+        
+        return {
+            phase: isCorpus ? 'Корпус' : 'Гринир',
+            timeLeft: formatCycleTime(timeLeftSec),
+            isPhase1: isCorpus
         };
     }
     
     // ЗЕМЛЯ
     if (locationKey === 'Земля') {
-        const now = new Date();
-        const diffTime = now - EARTH_KNOWN_DATE;
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
-        
-        const minutesInCycle = ((diffMinutes % EARTH_CYCLE_DURATION) + EARTH_CYCLE_DURATION) % EARTH_CYCLE_DURATION;
-        
-        let isDay, timeLeftMinutes;
-        
-        if (EARTH_KNOWN_PHASE === 'night') {
-            if (minutesInCycle < EARTH_NIGHT_DURATION) {
-                // Сейчас НОЧЬ
-                isDay = false;
-                timeLeftMinutes = EARTH_NIGHT_DURATION - minutesInCycle;
-            } else {
-                // Сейчас ДЕНЬ
-                isDay = true;
-                timeLeftMinutes = EARTH_CYCLE_DURATION - minutesInCycle;
-            }
-        }
-        
+        const data = CYCLE_DEFAULTS.earth;
+        const { isDay, timeLeftSec } = calculateCycleFromAPI(data);
         return {
             phase: isDay ? 'День' : 'Ночь',
-            timeLeft: formatTime(timeLeftMinutes * 60 * 1000),
+            timeLeft: formatCycleTime(timeLeftSec),
             isPhase1: isDay
         };
     }
     
-    // ДЛЯ ОСТАЛЬНЫХ ЛОКАЦИЙ - возвращаем null
     return null;
 }
 
