@@ -267,9 +267,9 @@ bot.telegram.setChatMenuButton({
 bot.telegram.setMyCommands([
     { command: 'start', description: '🏠 Главное меню' },
     { command: 'time', description: '🌍 Циклы миров' },
-    { command: 'fissures', description: '🔥 Разломы Бездны' },
+    { command: 'fissures', description: '☢️ Разломы Бездны' },
     { command: 'sortie', description: '📋 Вылазки' },
-    { command: 'baro', description: '🛸 Баро Ки\'Тиир' },
+    { command: 'baro', description: '🚑 Баро Ки\'Тиир' },
     { command: 'invasions', description: '⚔️ Вторжения' },
     { command: 'search', description: '🔍 Поиск варфрейма' },
     { command: 'mod', description: '🔧 Информация о моде' },
@@ -404,7 +404,7 @@ function formatWeaponInfo(weapon, type) {
         if (isCurrentWeek) {
             message += `✅ *Статус:* Доступен сейчас! (${currentWeek}-я из 8-ми)\n`;
         } else {
-            message += `⏰ *Статус:* Будет доступен на ${weaponWeek} неделе (сейчас ${currentWeek} из 8)\n`;
+            message += `⏳ *Статус:* Будет доступен на ${weaponWeek} неделе (сейчас ${currentWeek} из 8)\n`;
         }
         
         // Показываем оружие ТЕКУЩЕЙ недели
@@ -628,12 +628,12 @@ function getCycleStatus(locationKey) {
         };
     }
     
-    // ДЕЙМОС (100 мин Фасс + 50 мин Вом = 150 мин цикл)
+    // ДЕЙМОС (100 мин Фэз + 50 мин Воум = 150 мин цикл)
     // Откалибровано 07.12.2025
     if (locationKey === 'Камбионский Дрейф' || locationKey === 'Деймос') {
         const DEIMOS_START = 1765103388;
         const DEIMOS_LENGTH = 9000; // 150 минут в секундах
-        const DEIMOS_FASS_END = 6000; // 100 минут Фасс
+        const DEIMOS_FASS_END = 6000; // 100 минут Фэз
         
         const now = Math.floor(Date.now() / 1000);
         const elapsed = now - DEIMOS_START;
@@ -643,7 +643,7 @@ function getCycleStatus(locationKey) {
         const timeLeftSec = isFass ? (DEIMOS_FASS_END - pos) : (DEIMOS_LENGTH - pos);
         
         return {
-            phase: isFass ? 'Фасс' : 'Вом',
+            phase: isFass ? 'Фэз' : 'Воум',
             timeLeft: formatCycleTime(timeLeftSec),
             isPhase1: isFass
         };
@@ -727,20 +727,20 @@ function getFormattedCycles(location = null) {
         
         if (targetLocation === 'Земля') {
             const earth = getEarthCycle();
-            const emoji = earth.isDay ? '☀️' : '🌙';
-            return `🌍 *Земля*\n\n${emoji} ${earth.state}\n⏰ До смены: ${earth.timeLeft}`;
+            const emoji = earth.isDay ? '🌕' : '🌑';
+            return `🌍 *Земля*\n\n${emoji} ${earth.state}\n⏳ До смены: ${earth.timeLeft}`;
         } else if (targetLocation === 'Цетус') {
             const cetus = getCycleStatus('Равнины Эйдолона');
-            const emoji = cetus.phase === 'День' ? '☀️' : '🌙';
-            return `🌍 *Цетус*\n\n${emoji} ${cetus.phase}\n⏰ До смены: ${cetus.timeLeft}`;
+            const emoji = cetus.phase === 'День' ? '🌕' : '🌑';
+            return `🌍 *Цетус*\n\n${emoji} ${cetus.phase}\n⏳ До смены: ${cetus.timeLeft}`;
         } else if (targetLocation === 'Фортуна') {
             const fortuna = getCycleStatus('Фортуна');
-            const emoji = fortuna.phase === 'Тепло' ? '☀️' : '❄️';
-            return `🌍 *Фортуна*\n\n${emoji} ${fortuna.phase}\n⏰ До смены: ${fortuna.timeLeft}`;
+            const emoji = fortuna.phase === 'Тепло' ? '🔥' : '🧊';
+            return `🌍 *Фортуна*\n\n${emoji} ${fortuna.phase}\n⏳ До смены: ${fortuna.timeLeft}`;
         } else if (targetLocation === 'Деймос') {
             const deimos = getCycleStatus('Камбионский Дрейф');
-            const emoji = deimos.phase === 'Фэз' ? '☀️' : '🌙';
-            return `🌍 *Деймос*\n\n${emoji} ${deimos.phase}\n⏰ До смены: ${deimos.timeLeft}`;
+            const emoji = deimos.phase === 'Фэз' ? '🦠' : '🥒';
+            return `🌍 *Деймос*\n\n${emoji} ${deimos.phase}\n⏳ До смены: ${deimos.timeLeft}`;
         }
     }
     
@@ -753,24 +753,24 @@ function getFormattedCycles(location = null) {
     let message = `🌍 *ЦИКЛЫ*\n\n`;
     
     // Земля
-    const earthEmoji = earth.isDay ? '☀️' : '🌙';
+    const earthEmoji = earth.isDay ? '🌕' : '🌑';
     message += `*Земля:* ${earthEmoji} ${earth.state}\n`;
-    message += `⏰ До смены: ${earth.timeLeft}\n\n`;
+    message += `⏳ До смены: ${earth.timeLeft}\n\n`;
     
     // Цетус (Равнины Эйдолона)
-    const cetusEmoji = cetus.phase === 'День' ? '☀️' : '🌙';
+    const cetusEmoji = cetus.phase === 'День' ? '🌕' : '🌑';
     message += `*Цетус:* ${cetusEmoji} ${cetus.phase}\n`;
-    message += `⏰ До смены: ${cetus.timeLeft}\n\n`;
+    message += `⏳ До смены: ${cetus.timeLeft}\n\n`;
     
     // Фортуна
-    const fortunaEmoji = fortuna.phase === 'Тепло' ? '☀️' : '❄️';
+    const fortunaEmoji = fortuna.phase === 'Тепло' ? '🔥' : '🧊';
     message += `*Фортуна:* ${fortunaEmoji} ${fortuna.phase}\n`;
-    message += `⏰ До смены: ${fortuna.timeLeft}\n\n`;
+    message += `⏳ До смены: ${fortuna.timeLeft}\n\n`;
     
     // Деймос
-    const deimosEmoji = deimos.phase === 'Фэз' ? '☀️' : '🌙';
+    const deimosEmoji = deimos.phase === 'Фэз' ? '🦠' : '🥒';
     message += `*Деймос:* ${deimosEmoji} ${deimos.phase}\n`;
-    message += `⏰ До смены: ${deimos.timeLeft}`;
+    message += `⏳ До смены: ${deimos.timeLeft}`;
     
     return message;
 }
@@ -946,7 +946,7 @@ function formatWarframeInfo(info) {
         if (isCurrentWeek) {
             message += `✅ *Доступен СЕЙЧАС!*\n`;
         } else {
-            message += `⏰ Будет доступен на ${info.duviri.week} неделе (сейчас ${currentWeek} из 11)\n`;
+            message += `⏳ Будет доступен на ${info.duviri.week} неделе (сейчас ${currentWeek} из 11)\n`;
         }
     } else if (info.duviri === false) {
         message += `❌ *Цепь Дувири:* Недоступен\n`;
@@ -1178,7 +1178,7 @@ bot.command(['fissures', 'fissure', 'разломы'], async (ctx) => {
             }
         });
         
-        let message = '🔥 *Разломы Бездны:*\n\n';
+        let message = '☢️ *Разломы Бездны:*\n\n';
         
         const tierOrder = ['Lith', 'Meso', 'Neo', 'Axi', 'Requiem', 'Omnia'];
         
@@ -1190,7 +1190,7 @@ bot.command(['fissures', 'fissure', 'разломы'], async (ctx) => {
                     const location = translatePlanet(f.location);
                     const timeLeft = formatTimeLeft(f.end);
                     message += `• ${mission} — ${location}\n`;
-                    message += `  ⏱ ${timeLeft}\n`;
+                    message += `  ⏳ ${timeLeft}\n`;
                 });
                 message += '\n';
             }
@@ -1220,9 +1220,9 @@ bot.command(['sortie', 'вылазка', 'вылазки'], async (ctx) => {
         const sortie = ws.sorties.data[0];
         
         let message = '📋 *Вылазка дня*\n\n';
-        message += `👤 Босс: *${translateBoss(sortie.bossName) || 'Неизвестен'}*\n`;
-        message += `🎭 Фракция: ${translateFaction(sortie.faction)}\n`;
-        message += `⏱ До конца: ${formatTimeLeft(sortie.end)}\n\n`;
+        message += `💀 Босс: *${translateBoss(sortie.bossName) || 'Неизвестен'}*\n`;
+        message += `🔪 Фракция: ${translateFaction(sortie.faction)}\n`;
+        message += `⏳ До конца: ${formatTimeLeft(sortie.end)}\n\n`;
         
         if (sortie.missions && sortie.missions.length > 0) {
             message += '*Миссии:*\n';
@@ -1230,9 +1230,9 @@ bot.command(['sortie', 'вылазка', 'вылазки'], async (ctx) => {
                 const mission = translateMission(m.missionType);
                 const location = translatePlanet(m.location);
                 message += `\n*${i + 1}. ${mission}*\n`;
-                message += `📍 ${location}\n`;
+                message += `📌 ${location}\n`;
                 if (m.modifier) {
-                    message += `⚠️ ${translateModifier(m.modifier)}\n`;
+                    message += `🌀 ${translateModifier(m.modifier)}\n`;
                 }
             });
         }
@@ -1249,7 +1249,7 @@ bot.command(['sortie', 'вылазка', 'вылазки'], async (ctx) => {
 // ========================================================================
 
 bot.command(['baro', 'баро', 'торговец'], async (ctx) => {
-    console.log('🛸 Команда /baro вызвана');
+    console.log('🚑 Команда /baro вызвана');
     
     try {
         const ws = await getWorldstate();
@@ -1260,11 +1260,11 @@ bot.command(['baro', 'баро', 'торговец'], async (ctx) => {
         
         const baro = ws.voidtrader.data;
         
-        let message = '🛸 *Баро Ки\'Тиир*\n\n';
+        let message = '🚑 *Баро Ки\'Тиир*\n\n';
         
         if (baro.active) {
-            message += `📍 Локация: *${baro.location}*\n`;
-            message += `⏱ Улетит через: ${formatTimeLeft(baro.end)}\n\n`;
+            message += `📌 Локация: *${baro.location}*\n`;
+            message += `⏳ Улетит через: ${formatTimeLeft(baro.end)}\n\n`;
             
             if (baro.items && baro.items.length > 0) {
                 message += `📦 *Товары (${baro.items.length}):*\n`;
@@ -1279,8 +1279,8 @@ bot.command(['baro', 'баро', 'торговец'], async (ctx) => {
                 }
             }
         } else {
-            message += `⏱ Прилетит через: *${formatTimeLeft(baro.start)}*\n`;
-            message += `📍 Реле: ${baro.location || 'Неизвестно'}`;
+            message += `⏳ Прилетит через: *${formatTimeLeft(baro.start)}*\n`;
+            message += `📌 Реле: ${baro.location || 'Неизвестно'}`;
         }
         
         await ctx.replyWithMarkdown(message);
@@ -1296,15 +1296,15 @@ bot.command(['baro', 'баро', 'торговец'], async (ctx) => {
 
 // Функция создания прогресс-бара для вторжений
 function makeInvasionProgressBar(score, endScore) {
-    const totalBlocks = 20;
+    const totalBlocks = 10;
     // score: отрицательный = побеждает defender, положительный = побеждает attacker
     // Прогресс от -endScore до +endScore
     const progress = (score + endScore) / (2 * endScore); // 0 = defender wins, 1 = attacker wins
-    const filledBlocks = Math.round(progress * totalBlocks);
+    const attackerBlocks = Math.round(progress * totalBlocks);
     
     let bar = '';
     for (let i = 0; i < totalBlocks; i++) {
-        bar += i < filledBlocks ? '■' : '□';
+        bar += i < attackerBlocks ? '🟥' : '🟩';
     }
     return bar;
 }
@@ -1543,7 +1543,7 @@ function formatModInfo(mod) {
     
     // Дроп-локации
     if (mod.drops && mod.drops.length > 0) {
-        message += `\n📍 *Где найти:*\n`;
+        message += `\n📌 *Где найти:*\n`;
         
         // Сортируем по шансу дропа
         const sortedDrops = [...mod.drops].sort((a, b) => b.chance - a.chance);
@@ -1559,7 +1559,7 @@ function formatModInfo(mod) {
         }
     } else {
         // Если дропов нет
-        message += `\n📍 *Где найти:*\n`;
+        message += `\n📌 *Где найти:*\n`;
         message += `Нет информации\n`;
     }
     
@@ -1823,7 +1823,7 @@ function checkSingleCycle(locationKey, now) {
         if (minutesUntilChange === threshold && !checkedEvents.has(eventKey)) {
             checkedEvents.add(eventKey);
             const nextPhase = isPhase1 ? phase2Name : phase1Name;
-            const message = `⏰ *${displayName}*\n\n` +
+            const message = `⏳ *${displayName}*\n\n` +
                           `Через ${threshold} минут наступит: *${nextPhase}*`;
             sendToSubscribers(message);
             saveState();
@@ -1948,19 +1948,19 @@ async function getCommandPreview(command) {
                 
                 const cetusIcon = cetus.isPhase1 ? '☀️' : '🌙';
                 message += `*Цетус:* ${cetusIcon} ${cetus.phase}\n`;
-                message += `⏱ ${cetus.timeLeft}\n\n`;
+                message += `⏳ ${cetus.timeLeft}\n\n`;
                 
-                const fortunaIcon = fortuna.isPhase1 ? '🔥' : '❄️';
+                const fortunaIcon = fortuna.isPhase1 ? '🔥' : '🧊';
                 message += `*Долина Сфер:* ${fortunaIcon} ${fortuna.phase}\n`;
-                message += `⏱ ${fortuna.timeLeft}\n\n`;
+                message += `⏳ ${fortuna.timeLeft}\n\n`;
                 
                 const deimosIcon = deimos.isPhase1 ? '☀️' : '🌙';
                 message += `*Камбион:* ${deimosIcon} ${deimos.phase}\n`;
-                message += `⏱ ${deimos.timeLeft}\n\n`;
+                message += `⏳ ${deimos.timeLeft}\n\n`;
                 
                 const zarimanIcon = zariman.isPhase1 ? '🔵' : '🔴';
                 message += `*Заруман:* ${zarimanIcon} ${zariman.phase}\n`;
-                message += `⏱ ${zariman.timeLeft}`;
+                message += `⏳ ${zariman.timeLeft}`;
                 
                 return {
                     title: '🌍 Циклы открытых миров',
@@ -1975,17 +1975,17 @@ async function getCommandPreview(command) {
                 
                 const fissures = ws.fissures.data.filter(f => !f.hard).slice(0, 6);
                 
-                let message = '🔥 *Разломы Бездны:*\n\n';
+                let message = '☢️ *Разломы Бездны:*\n\n';
                 fissures.forEach(f => {
                     const tier = translateTier(f.tier);
                     const mission = translateMission(f.missionType);
                     message += `*${tier}* — ${mission}\n`;
-                    message += `📍 ${f.location}\n`;
-                    message += `⏱ ${formatTimeLeft(f.end)}\n\n`;
+                    message += `📌 ${f.location}\n`;
+                    message += `⏳ ${formatTimeLeft(f.end)}\n\n`;
                 });
                 
                 return {
-                    title: '🔥 Разломы Бездны',
+                    title: '☢️ Разломы Бездны',
                     description: `Активных: ${ws.fissures.data.length}`,
                     message: message
                 };
@@ -1998,13 +1998,13 @@ async function getCommandPreview(command) {
                 const sortie = ws.sorties.data[0];
                 
                 let message = '📋 *Вылазка дня*\n\n';
-                message += `👤 Босс: *${sortie.bossName || 'Неизвестен'}*\n`;
-                message += `🎭 Фракция: ${translateFaction(sortie.faction)}\n\n`;
+                message += `💀 Босс: *${sortie.bossName || 'Неизвестен'}*\n`;
+                message += `🔪 Фракция: ${translateFaction(sortie.faction)}\n\n`;
                 
                 if (sortie.missions) {
                     sortie.missions.forEach((m, i) => {
                         message += `*${i + 1}. ${translateMission(m.missionType)}*\n`;
-                        message += `📍 ${m.location}\n\n`;
+                        message += `📌 ${m.location}\n\n`;
                     });
                 }
                 
@@ -2021,24 +2021,24 @@ async function getCommandPreview(command) {
                 
                 const baro = ws.voidtrader.data;
                 
-                let message = '🛸 *Баро Ки\'Тиир*\n\n';
+                let message = '🚑 *Баро Ки\'Тиир*\n\n';
                 
                 if (baro.active) {
-                    message += `📍 Локация: *${baro.location}*\n`;
-                    message += `⏱ Улетит через: ${formatTimeLeft(baro.end)}\n`;
+                    message += `📌 Локация: *${baro.location}*\n`;
+                    message += `⏳ Улетит через: ${formatTimeLeft(baro.end)}\n`;
                     message += `📦 Товаров: ${baro.items ? baro.items.length : 0}`;
                     
                     return {
-                        title: '🛸 Баро Ки\'Тиир',
+                        title: '🚑 Баро Ки\'Тиир',
                         description: `Сейчас на ${baro.location}`,
                         message: message
                     };
                 } else {
-                    message += `⏱ Прилетит через: *${formatTimeLeft(baro.start)}*\n`;
-                    message += `📍 Реле: ${baro.location || 'Неизвестно'}`;
+                    message += `⏳ Прилетит через: *${formatTimeLeft(baro.start)}*\n`;
+                    message += `📌 Реле: ${baro.location || 'Неизвестно'}`;
                     
                     return {
-                        title: '🛸 Баро Ки\'Тиир',
+                        title: '🚑 Баро Ки\'Тиир',
                         description: `Прилетит через ${formatTimeLeft(baro.start)}`,
                         message: message
                     };
@@ -2053,7 +2053,7 @@ async function getCommandPreview(command) {
                 
                 let message = '⚔️ *Вторжения:*\n\n';
                 invasions.forEach(inv => {
-                    message += `📍 *${inv.location}*\n`;
+                    message += `📌 *${inv.location}*\n`;
                     message += `${translateFaction(inv.attackingFaction)} vs ${translateFaction(inv.defendingFaction)}\n`;
                     message += `📊 ${Math.abs(inv.progress || 0).toFixed(1)}%\n\n`;
                 });
