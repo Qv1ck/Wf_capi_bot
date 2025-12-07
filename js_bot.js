@@ -273,7 +273,7 @@ bot.telegram.setMyCommands([
     { command: 'invasions', description: '⚔️ Вторжения' },
     { command: 'search', description: '🔍 Поиск варфрейма' },
     { command: 'mod', description: '🔧 Информация о моде' },
-    { command: 'chain_frame', description: '🤖 Цепь Дувири' },
+    { command: 'chain_frame', description: '⛓️‍💥 Цепь Дувири' },
     { command: 'subscribe', description: '🔔 Подписаться' }
 ]).catch(err => console.log('Не удалось зарегистрировать команды:', err));
 
@@ -972,10 +972,10 @@ bot.start((ctx) => {
         ],
         [
             Markup.button.callback('🔫 Оружие', 'cmd_weapon'),
-            Markup.button.callback('🌀 Цепь (оружие)', 'cmd_chain_guns')
+            Markup.button.callback('⛓️‍💥 Цепь (оружие)', 'cmd_chain_guns')
         ],
         [
-            Markup.button.callback('🤖 Цепь (варфреймы)', 'cmd_chain_frame'),
+            Markup.button.callback('⛓️‍💥 Цепь (варфреймы)', 'cmd_chain_frame'),
             Markup.button.callback('🔔 Подписки', 'cmd_subscribe')
         ]
     ]);
@@ -995,7 +995,7 @@ bot.command('primary', async (ctx) => {
         
         if (!query) {
             return ctx.reply(
-                '🔫 *Основное оружие*\n\n' +
+                '🚀 *Основное оружие*\n\n' +
                 'Использование: `/primary <название>`\n\n' +
                 'Примеры:\n' +
                 '`/primary Болтор`\n' +
@@ -1061,7 +1061,7 @@ bot.command('melee', async (ctx) => {
         
         if (!query) {
             return ctx.reply(
-                '⚔️ *Ближнее оружие*\n\n' +
+                '🪓 *Ближнее оружие*\n\n' +
                 'Использование: `/melee <название>`\n\n' +
                 'Примеры:\n' +
                 '`/melee Скана`\n' +
@@ -1385,7 +1385,7 @@ bot.command(['invasions', 'invasion', 'вторжения'], async (ctx) => {
             return ctx.reply('⚔️ Нет активных вторжений.');
         }
         
-        let message = '̿̿ ̿̿ ̿̿ ̿\'̿\'\\̵͇̿̿\\з= ( ▀ ͜͞ʖ▀) =ε/̵͇̿̿/\'̿\'̿ ̿ ̿̿ ̿̿ ̿̿ *Вторжения:*\n\n';
+        let message = '👾 *Вторжения:*\n\n';
         
         invasions.slice(0, 6).forEach(inv => {
             // Даты
@@ -1615,7 +1615,7 @@ bot.action('cmd_weapon', async (ctx) => {
 bot.action('weapon_primary', async (ctx) => {
     await ctx.answerCbQuery();
     await ctx.reply(
-        '🔫 *Основное оружие*\n\n' +
+        '🚀 *Основное оружие*\n\n' +
         'Используйте: `/primary <название>`\n\n' +
         'Примеры:\n' +
         '`/primary Болтор`\n' +
@@ -1641,7 +1641,7 @@ bot.action('weapon_secondary', async (ctx) => {
 bot.action('weapon_melee', async (ctx) => {
     await ctx.answerCbQuery();
     await ctx.reply(
-        '⚔️ *Ближнее оружие*\n\n' +
+        '🪓 *Ближнее оружие*\n\n' +
         'Используйте: `/melee <название>`\n\n' +
         'Примеры:\n' +
         '`/melee Скана`\n' +
