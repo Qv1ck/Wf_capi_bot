@@ -515,21 +515,22 @@ function getCycleStatus(locationKey) {
         };
     }
     
-    // ФОРТУНА (инвертировано: day в API = холод)
+    // ФОРТУНА (day в API = Тепло)
     if (locationKey === 'Фортуна') {
         const data = CYCLE_DEFAULTS.fortuna;
         const { isDay, timeLeftSec } = calculateCycleFromAPI(data);
         return {
-            phase: isDay ? 'Холод' : 'Тепло',
+            phase: isDay ? 'Тепло' : 'Холод',
             timeLeft: formatCycleTime(timeLeftSec),
-            isPhase1: !isDay
+            isPhase1: isDay
         };
     }
     
-    // ДЕЙМОС (100 мин Фасс + 50 мин Вом)
+    // ДЕЙМОС (100 мин Фасс + 50 мин Вом = 150 мин цикл)
+    // Откалибровано 07.12.2025
     if (locationKey === 'Камбионский Дрейф' || locationKey === 'Деймос') {
-        const DEIMOS_START = 1509371722;
-        const DEIMOS_LENGTH = 9000; // 150 минут
+        const DEIMOS_START = 1765103388;
+        const DEIMOS_LENGTH = 9000; // 150 минут в секундах
         const DEIMOS_FASS_END = 6000; // 100 минут Фасс
         
         const now = Math.floor(Date.now() / 1000);
