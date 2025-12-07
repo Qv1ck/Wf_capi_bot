@@ -429,7 +429,7 @@ const helminthAbilities = {
     "Atlas": { ability: "Окаменение", slot: 3 },
     "Banshee": { ability: "Тишина", slot: 2 },
     "Baruuk": { ability: "Усыпление", slot: 2 },
-    "Caliban": { ability: "Гнев Сентиентов", slot: 2 },
+    "Caliban": { ability: "Ликвидатор", slot: 2 },
     "Chroma": { ability: "Элементальный Оберег", slot: 2 },
     "Citrine": { ability: "Раскалывающий Взрыв", slot: 2 },
     "Dagath": { ability: "Зловещие Косы", slot: 2 },
@@ -479,7 +479,8 @@ const helminthAbilities = {
     "Wukong": { ability: "Неповиновение", slot: 3 },
     "Xaku": { ability: "Шёпот Ксаты", slot: 1 },
     "Yareli": { ability: "Водный Заслон", slot: 2 },
-    "Zephyr": { ability: "Воздушный Рывок", slot: 1 }
+    "Zephyr": { ability: "Воздушный Рывок", slot: 1 },
+	"Temple": { ability: "Пиротехника", slot: 1 },
 };
 
 const augmentMods = {
