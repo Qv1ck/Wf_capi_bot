@@ -949,7 +949,6 @@ function formatWarframeInfo(info) {
         
         message += `🌀 *Цепь Дувири:*\n`;
         message += `📅 Неделя: ${info.duviri.week} из 11\n`;
-        message += `💉 Гельминт: ${info.duviri.helminth}\n`;
         
         if (isCurrentWeek) {
             message += `✅ *Доступен СЕЙЧАС!*\n`;
