@@ -424,61 +424,62 @@ function formatWeaponInfo(weapon, type) {
 // ========================================================================
 
 const helminthAbilities = {
-    "Ash": { ability: "Ищущий Сюрикен", slot: 1 },
-    "Atlas": { ability: "Груда Булыжников", slot: 1 },
-    "Banshee": { ability: "Тишина", slot: 3 },
-    "Baruuk": { ability: "Реактивный Шторм", slot: 4 },
-    "Chroma": { ability: "Вечный Страж", slot: 2 },
-    "Citrine": { ability: "Кристальный Резонанс", slot: 3 },
-    "Ember": { ability: "Экзотермика", slot: 1 },
-    "Equinox": { ability: "Отдых и Ярость", slot: 3 },
-    "Excalibur": { ability: "Яростное Копьё", slot: 1 },
-    "Frost": { ability: "Охлаждающая Сфера", slot: 1 },
-    "Gara": { ability: "Спектроисточник", slot: 2 },
-    "Garuda": { ability: "Измельчающие Когти", slot: 1 },
-    "Gauss": { ability: "Термическое Клеймо", slot: 3 },
-    "Grendel": { ability: "Сытость", slot: 3 },
-    "Gyre": { ability: "Удар Вольт", slot: 1 },
-    "Harrow": { ability: "Нерушимый Завет", slot: 1 },
-    "Hildryn": { ability: "Пылающий Грабёж", slot: 2 },
-    "Hydroid": { ability: "Вирусный Шторм", slot: 4 },
-    "Inaros": { ability: "Инверсионная Броня", slot: 2 },
-    "Ivara": { ability: "Проникновение", slot: 3 },
-    "Khora": { ability: "Усиливающийся Когтехлыст", slot: 1 },
-    "Kullervo": { ability: "Коллективное Проклятие", slot: 2 },
-    "Lavos": { ability: "Вуаль Поганки", slot: 1 },
-    "Limbo": { ability: "Укрытие Бездны", slot: 1 },
-    "Loki": { ability: "Тихая Невидимость", slot: 2 },
-    "Mag": { ability: "Разрывающее Сокрушение", slot: 2 },
-    "Mesa": { ability: "Вальс Мисы", slot: 3 },
-    "Mirage": { ability: "Полное Затмение", slot: 3 },
-    "Nekros": { ability: "Щит Теней", slot: 4 },
-    "Nezha": { ability: "Пылающий Нимб", slot: 1 },
-    "Nidus": { ability: "Ненасытность", slot: 1 },
-    "Nova": { ability: "Молекулярное Деление", slot: 4 },
-    "Nyx": { ability: "Ассимиляция", slot: 4 },
-    "Oberon": { ability: "Возрождение Феникса", slot: 4 },
-    "Octavia": { ability: "Дирижёр", slot: 1 },
-    "Protea": { ability: "Раздача Гранат", slot: 3 },
-    "Qorvex": { ability: "Каменная Стена", slot: 2 },
-    "Revenant": { ability: "Пакт Раба", slot: 1 },
-    "Rhino": { ability: "Нерушимый Рывок", slot: 2 },
-    "Saryn": { ability: "Доза Яда", slot: 1 },
-    "Sevagoth": { ability: "Скользящее Мучение", slot: 1 },
+    // Правильные способности для Гельминта (проверено по вики)
+    "Ash": { ability: "Сюрикен", slot: 1 },
+    "Atlas": { ability: "Окаменение", slot: 3 },
+    "Banshee": { ability: "Тишина", slot: 2 },
+    "Baruuk": { ability: "Усыпление", slot: 2 },
+    "Caliban": { ability: "Гнев Сентиентов", slot: 2 },
+    "Chroma": { ability: "Элементальный Оберег", slot: 2 },
+    "Citrine": { ability: "Раскалывающий Взрыв", slot: 2 },
+    "Dagath": { ability: "Зловещие Косы", slot: 2 },
+    "Ember": { ability: "Огненный Шквал", slot: 3 },
+    "Equinox": { ability: "Покой и Провокация", slot: 2 },
+    "Excalibur": { ability: "Ослепляющий Свет", slot: 2 },
+    "Frost": { ability: "Ледяная Волна", slot: 2 },
+    "Gara": { ability: "Спектрошторм", slot: 3 },
+    "Garuda": { ability: "Кровавый Алтарь", slot: 2 },
+    "Gauss": { ability: "Термальный Подрыв", slot: 3 },
+    "Grendel": { ability: "Насыщение", slot: 2 },
+    "Gyre": { ability: "Кольцо Катерсис", slot: 2 },
+    "Harrow": { ability: "Осуждение", slot: 1 },
+    "Hildryn": { ability: "Грабёж", slot: 2 },
+    "Hydroid": { ability: "Шторм Темпестарии", slot: 1 },
+    "Inaros": { ability: "Иссушение", slot: 1 },
+    "Ivara": { ability: "Колчан", slot: 1 },
+    "Khora": { ability: "Захват", slot: 2 },
+    "Kullervo": { ability: "Возмездие", slot: 2 },
+    "Lavos": { ability: "Ядовитые Змеи", slot: 1 },
+    "Limbo": { ability: "Изгнание", slot: 1 },
+    "Loki": { ability: "Обманка", slot: 1 },
+    "Mag": { ability: "Притягивание", slot: 1 },
+    "Mesa": { ability: "Тир", slot: 2 },
+    "Mirage": { ability: "Затмение", slot: 3 },
+    "Nekros": { ability: "Устрашение", slot: 2 },
+    "Nezha": { ability: "Огненный Путь", slot: 1 },
+    "Nidus": { ability: "Личинка", slot: 2 },
+    "Nova": { ability: "Нуль-Звезда", slot: 1 },
+    "Nyx": { ability: "Контроль Разума", slot: 1 },
+    "Oberon": { ability: "Кара", slot: 1 },
+    "Octavia": { ability: "Резонатор", slot: 3 },
+    "Protea": { ability: "Раздатчик", slot: 3 },
+    "Qorvex": { ability: "Хитиновая Стена", slot: 2 },
+    "Revenant": { ability: "Жатва", slot: 3 },
+    "Rhino": { ability: "Рёв", slot: 3 },
+    "Saryn": { ability: "Линька", slot: 2 },
+    "Sevagoth": { ability: "Уныние", slot: 3 },
     "Styanax": { ability: "Метательное Копьё", slot: 1 },
-    "Titania": { ability: "Блиц Бритвокрыла", slot: 1 },
-    "Trinity": { ability: "Вампирская Пиявка", slot: 2 },
-    "Valkyr": { ability: "Вечная Война", slot: 2 },
-    "Vauban": { ability: "Отталкивающая Бастилия", slot: 3 },
-    "Volt": { ability: "Шокирующая Скорость", slot: 2 },
-    "Wisp": { ability: "Разгоняющиеся Водохранилища", slot: 2 },
-    "Wukong": { ability: "Небесный Посох", slot: 1 },
-    "Xaku": { ability: "Осколок Отказа", slot: 4 },
-    "Yareli": { ability: "Морская Раковина", slot: 3 },
-    "Zephyr": { ability: "Воздушный Взрыв", slot: 1 },
-    "Caliban": { ability: "Оболочка Сентиентов", slot: 3 },
-    "Dagath": { ability: "Проклятие Мести", slot: 2 },
-    "Voruna": { ability: "Волчья Стая", slot: 1 }
+    "Titania": { ability: "Чары", slot: 1 },
+    "Trinity": { ability: "Источник Жизни", slot: 1 },
+    "Valkyr": { ability: "Боевой Клич", slot: 2 },
+    "Vauban": { ability: "Тесла Нервос", slot: 1 },
+    "Volt": { ability: "Шок", slot: 1 },
+    "Voruna": { ability: "Волчья Стая", slot: 1 },
+    "Wisp": { ability: "Прорыв", slot: 3 },
+    "Wukong": { ability: "Неповиновение", slot: 3 },
+    "Xaku": { ability: "Шёпот Ксаты", slot: 1 },
+    "Yareli": { ability: "Водный Заслон", slot: 2 },
+    "Zephyr": { ability: "Воздушный Рывок", slot: 1 }
 };
 
 const augmentMods = {
@@ -1459,7 +1460,7 @@ const SYNDICATES_DB = {
             },
             {
                 id: 'quills',
-                name: 'Перья',
+                name: 'Перья (Куиллы)',
                 leader: 'Онкко',
                 ranks: ['Нейтралитет', 'Мот', 'Наблюдатель', 'Медиум', 'Оператор'],
                 rewards: ['Ампы (оружие оператора)', 'Арканы Эйдолона', 'Фокус-линзы'],
@@ -1473,7 +1474,7 @@ const SYNDICATES_DB = {
         syndicates: [
             {
                 id: 'solaris',
-                name: 'Глас Солярис',
+                name: 'Солярис Юнайтед',
                 leader: 'Юдико',
                 ranks: ['Нейтралитет', 'Беженец', 'Работник', 'Оперативник', 'Старейшина'],
                 rewards: ['Части Гарруды', 'Части Барука', 'Китганы (вторичка)', 'К-драйвы', 'Рыболовное снаряжение'],
@@ -1481,7 +1482,7 @@ const SYNDICATES_DB = {
             },
             {
                 id: 'vox',
-                name: 'Уточка',
+                name: 'Глас Солярис',
                 leader: 'Маленький Утконос',
                 ranks: ['Нейтралитет', 'Агент', 'Рука', 'Инструмент', 'Голос'],
                 rewards: ['Части Хильдрин', 'Части Барука', 'Архана моды', 'Гирокомпоненты оператора'],
@@ -1541,7 +1542,7 @@ const SYNDICATES_DB = {
             {
                 id: 'steel_meridian',
                 name: 'Стальной Меридиан',
-                leader: 'Кресса Тал',
+                leader: 'Крессы Тал',
                 ranks: ['Нейтралитет', 'Беженец', 'Спаситель', 'Защитник', 'Генерал'],
                 rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
                 howToRank: 'Ношение сигила, задания синдиката, медальоны'
@@ -1564,7 +1565,7 @@ const SYNDICATES_DB = {
             },
             {
                 id: 'perrin',
-                name: 'Посладовательность Перрина',
+                name: 'Перрин Сиквенс',
                 leader: 'Эрго Глас',
                 ranks: ['Нейтралитет', 'Стажёр', 'Аналитик', 'Эксперт', 'Партнёр'],
                 rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
@@ -1580,7 +1581,7 @@ const SYNDICATES_DB = {
             },
             {
                 id: 'new_loka',
-                name: 'Новая Лока',
+                name: 'Нью Лока',
                 leader: 'Амарин',
                 ranks: ['Нейтралитет', 'Обновлённый', 'Пробуждённый', 'Титан', 'Предводитель'],
                 rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
@@ -1588,8 +1589,8 @@ const SYNDICATES_DB = {
             },
             {
                 id: 'simaris',
-                name: 'Цефалон Симэрис',
-                leader: 'Симэрис',
+                name: 'Цефалон Симарис',
+                leader: 'Симарис',
                 ranks: ['Нет рангов'],
                 rewards: ['Чертежи варфреймов', 'Оружие', 'Моды для сканера', 'Виджеты'],
                 howToRank: 'Сканирование врагов, ежедневные задания синтеза'
@@ -1610,6 +1611,21 @@ bot.command(['syndicates', 'syndicate', 'синдикаты', 'синдикат'
         parse_mode: 'Markdown',
         ...keyboard 
     });
+});
+
+// Кнопка "Назад" в главное меню (должна быть ПЕРЕД регуляркой synd_)
+bot.action('synd_back', async (ctx) => {
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('🌅 Цетус', 'synd_cetus'), Markup.button.callback('❄️ Фортуна', 'synd_fortuna')],
+        [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('🔮 Зариман', 'synd_zariman')],
+        [Markup.button.callback('⚔️ Реле', 'synd_relay')]
+    ]);
+    
+    await ctx.editMessageText('🏛 *Синдикаты*\n\nВыберите локацию:', { 
+        parse_mode: 'Markdown',
+        ...keyboard 
+    });
+    await ctx.answerCbQuery();
 });
 
 // Обработчик выбора локации
@@ -1672,21 +1688,6 @@ bot.action(/^syndinfo_(\w+)_(\w+)$/, async (ctx) => {
     ]);
     
     await ctx.editMessageText(message, { parse_mode: 'Markdown', ...keyboard });
-    await ctx.answerCbQuery();
-});
-
-// Кнопка "Назад" в главное меню
-bot.action('synd_back', async (ctx) => {
-    const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback('🌅 Цетус', 'synd_cetus'), Markup.button.callback('❄️ Фортуна', 'synd_fortuna')],
-        [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('🔮 Зариман', 'synd_zariman')],
-        [Markup.button.callback('⚔️ Реле', 'synd_relay')]
-    ]);
-    
-    await ctx.editMessageText('🏛 *Синдикаты*\n\nВыберите локацию:', { 
-        parse_mode: 'Markdown',
-        ...keyboard 
-    });
     await ctx.answerCbQuery();
 });
 
@@ -1862,9 +1863,9 @@ bot.action('cmd_weapon', async (ctx) => {
     await ctx.answerCbQuery();
     
     const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback('🔫 Основное', 'weapon_primary')],
+        [Markup.button.callback('🚀 Основное', 'weapon_primary')],
         [Markup.button.callback('🔫 Вторичное', 'weapon_secondary')],
-        [Markup.button.callback('⚔️ Ближнее', 'weapon_melee')]
+        [Markup.button.callback('🪓 Ближнее', 'weapon_melee')]
     ]);
     
     ctx.reply('🔫 Выберите тип оружия:', keyboard);
