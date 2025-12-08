@@ -274,7 +274,8 @@ bot.telegram.setMyCommands([
     { command: 'syndicates', description: '📜 Синдикаты' },
     { command: 'search', description: '🔍 Поиск варфрейма' },
     { command: 'mod', description: '🔧 Информация о моде' },
-    { command: 'chain_frame', description: '⛓️‍💥 Цепь Дувири' },
+    { command: 'chain_frame', description: '⛓️‍💥 Цепь Дувири (варфреймы)' },
+    { command: 'chain_guns', description: '🔫 Цепь Дувири (оружие)' },
     { command: 'subscribe', description: '🔔 Подписаться' }
 ]).catch(err => console.log('Не удалось зарегистрировать команды:', err));
 
@@ -1443,9 +1444,31 @@ bot.command(['invasions', 'invasion', 'вторжения'], async (ctx) => {
 
 // База данных синдикатов
 const SYNDICATES_DB = {
+    earth: {
+        name: '🌍 Земля',
+        location: 'Земля',
+        syndicates: [
+            {
+                id: 'cetus_hub',
+                name: '🌅 Цетус',
+                isSubmenu: true,
+                location: 'Равнины Эйдолона'
+            },
+            {
+                id: 'kahl',
+                name: 'Гарнизон Кахла',
+                leader: 'Кахл-175',
+                location: 'Лагерь Скитальца',
+                ranks: ['Посторонний', 'Брат по оружию', 'Друг', 'Защитник', 'Семья'],
+                rewards: ['Части Стинакса', 'Моды Архонтов', 'Косметика Гринир'],
+                howToRank: 'Еженедельные миссии Кахла'
+            }
+        ]
+    },
     cetus: {
         name: '🌅 Цетус',
         location: 'Равнины Эйдолона',
+        parentLocation: 'earth',
         syndicates: [
             {
                 id: 'ostron',
@@ -1474,7 +1497,7 @@ const SYNDICATES_DB = {
         ]
     },
     fortuna: {
-        name: '❄️ Фортуна',
+        name: '🪐 Фортуна',
         location: 'Венера, Долина Сфер',
         syndicates: [
             {
@@ -1558,7 +1581,7 @@ const SYNDICATES_DB = {
         ]
     },
     zariman: {
-        name: '🧑🏻‍🚀 Зариман',
+        name: '👩🏻‍🚀 Зариман',
         location: 'Зариман 10-0',
         syndicates: [
             {
@@ -1572,7 +1595,7 @@ const SYNDICATES_DB = {
         ]
     },
     relay: {
-        name: '⚔️ Реле',
+        name: '🏛 Синдикаты',
         location: 'Станции в Солнечной системе',
         syndicates: [
             {
@@ -1642,20 +1665,6 @@ const SYNDICATES_DB = {
             }
         ]
     },
-    earth: {
-        name: '🌍 Земля',
-        location: 'Лагерь Скитальца',
-        syndicates: [
-            {
-                id: 'kahl',
-                name: 'Гарнизон Кахла',
-                leader: 'Кахл-175',
-                ranks: ['Посторонний', 'Брат по оружию', 'Друг', 'Защитник', 'Семья'],
-                rewards: ['Части Стинакса', 'Моды Архонтов', 'Косметика Гринир'],
-                howToRank: 'Еженедельные миссии Кахла'
-            }
-        ]
-    },
     global: {
         name: '📻 Ночная Волна',
         location: 'Везде',
@@ -1675,9 +1684,9 @@ const SYNDICATES_DB = {
 // Главное меню синдикатов
 bot.command(['syndicates', 'syndicate', 'синдикаты', 'синдикат'], async (ctx) => {
     const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback('🌅 Цетус', 'synd_cetus'), Markup.button.callback('❄️ Фортуна', 'synd_fortuna')],
-        [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('🔮 Зариман', 'synd_zariman')],
-        [Markup.button.callback('⚔️ Реле', 'synd_relay'), Markup.button.callback('🌍 Земля', 'synd_earth')],
+        [Markup.button.callback('🌍 Земля', 'synd_earth'), Markup.button.callback('🪐 Фортуна', 'synd_fortuna')],
+        [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('👩🏻‍🚀 Зариман', 'synd_zariman')],
+        [Markup.button.callback('🍕 1999', 'synd_hex'), Markup.button.callback('🏛 Синдикаты', 'synd_relay')],
         [Markup.button.callback('📻 Ночная Волна', 'synd_global')]
     ]);
     
@@ -1690,9 +1699,9 @@ bot.command(['syndicates', 'syndicate', 'синдикаты', 'синдикат'
 // Кнопка "Назад" в главное меню (должна быть ПЕРЕД регуляркой synd_)
 bot.action('synd_back', async (ctx) => {
     const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback('🌅 Цетус', 'synd_cetus'), Markup.button.callback('❄️ Фортуна', 'synd_fortuna')],
-        [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('🔮 Зариман', 'synd_zariman')],
-        [Markup.button.callback('⚔️ Реле', 'synd_relay'), Markup.button.callback('🌍 Земля', 'synd_earth')],
+        [Markup.button.callback('🌍 Земля', 'synd_earth'), Markup.button.callback('🪐 Фортуна', 'synd_fortuna')],
+        [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('👩🏻‍🚀 Зариман', 'synd_zariman')],
+        [Markup.button.callback('🍕 1999', 'synd_hex'), Markup.button.callback('🏛 Синдикаты', 'synd_relay')],
         [Markup.button.callback('📻 Ночная Волна', 'synd_global')]
     ]);
     
@@ -1712,11 +1721,51 @@ bot.action(/^synd_(\w+)$/, async (ctx) => {
         return ctx.answerCbQuery('Локация не найдена');
     }
     
+    // Если синдикат только один и это не подменю — сразу показываем информацию
+    if (locationData.syndicates.length === 1 && !locationData.syndicates[0].isSubmenu) {
+        const syndicate = locationData.syndicates[0];
+        
+        let message = `📜 *${syndicate.name}*\n\n`;
+        message += `📌 Локация: ${locationData.location}${syndicate.location ? ` (${syndicate.location})` : ''}\n`;
+        message += `👑 Лидер: ${syndicate.leader}\n\n`;
+        
+        message += `📊 *Ранги:*\n`;
+        syndicate.ranks.forEach((rank, i) => {
+            message += `${i + 1}. ${rank}\n`;
+        });
+        
+        message += `\n🎁 *Что можно получить:*\n`;
+        syndicate.rewards.forEach(reward => {
+            message += `• ${reward}\n`;
+        });
+        
+        message += `\n💡 *Как качать:* ${syndicate.howToRank}`;
+        
+        const backButton = locationData.parentLocation 
+            ? `synd_${locationData.parentLocation}` 
+            : 'synd_back';
+        
+        const keyboard = Markup.inlineKeyboard([
+            [Markup.button.callback('◀️ Назад', backButton)]
+        ]);
+        
+        await ctx.editMessageText(message, { parse_mode: 'Markdown', ...keyboard });
+        await ctx.answerCbQuery();
+        return;
+    }
+    
+    // Если синдикатов несколько — показываем список
     const buttons = locationData.syndicates.map(s => {
-        const loc = s.location ? ` (${s.location})` : '';
-        return [Markup.button.callback(`${s.name}${loc}`, `syndinfo_${locationId}_${s.id}`)];
+        const loc = s.location && !s.isSubmenu ? ` (${s.location})` : '';
+        // Если это подменю — переходим в другую локацию, иначе показываем инфо
+        const callbackData = s.isSubmenu ? `synd_${s.id.replace('_hub', '')}` : `syndinfo_${locationId}_${s.id}`;
+        return [Markup.button.callback(`${s.name}${loc}`, callbackData)];
     });
-    buttons.push([Markup.button.callback('◀️ Назад', 'synd_back')]);
+    
+    const backButton = locationData.parentLocation 
+        ? `synd_${locationData.parentLocation}` 
+        : 'synd_back';
+    buttons.push([Markup.button.callback('◀️ Назад', backButton)]);
     
     const keyboard = Markup.inlineKeyboard(buttons);
     
