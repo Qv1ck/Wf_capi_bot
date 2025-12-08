@@ -271,7 +271,7 @@ bot.telegram.setMyCommands([
     { command: 'sortie', description: '📋 Вылазки' },
     { command: 'baro', description: '🚑 Баро Ки\'Тиир' },
     { command: 'invasions', description: '⚔️ Вторжения' },
-    { command: 'syndicates', description: '📜 Синдикаты' },
+    { command: 'syndicates', description: '📜 Фракции' },
     { command: 'search', description: '🔍 Поиск варфрейма' },
     { command: 'mod', description: '🔧 Информация о моде' },
     { command: 'chain_frame', description: '⛓️‍💥 Цепь Дувири (варфреймы)' },
