@@ -1595,7 +1595,7 @@ const SYNDICATES_DB = {
         ]
     },
     relay: {
-        name: '🏛 Синдикаты',
+        name: '👨‍👨‍👧‍👧 Синдикаты',
         location: 'Станции в Солнечной системе',
         syndicates: [
             {
@@ -1686,11 +1686,11 @@ bot.command(['syndicates', 'syndicate', 'синдикаты', 'синдикат'
     const keyboard = Markup.inlineKeyboard([
         [Markup.button.callback('🌍 Земля', 'synd_earth'), Markup.button.callback('🪐 Фортуна', 'synd_fortuna')],
         [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('👩🏻‍🚀 Зариман', 'synd_zariman')],
-        [Markup.button.callback('🍕 1999', 'synd_hex'), Markup.button.callback('🏛 Синдикаты', 'synd_relay')],
+        [Markup.button.callback('🍕 1999', 'synd_hex'), Markup.button.callback('👨‍👨‍👧‍👧 Синдикаты', 'synd_relay')],
         [Markup.button.callback('📻 Ночная Волна', 'synd_global')]
     ]);
     
-    await ctx.reply('🏛 *Синдикаты*\n\nВыберите локацию:', { 
+    await ctx.reply('🏛 *Фракции*\n\nВыберите локацию:', { 
         parse_mode: 'Markdown',
         ...keyboard 
     });
@@ -1701,11 +1701,11 @@ bot.action('synd_back', async (ctx) => {
     const keyboard = Markup.inlineKeyboard([
         [Markup.button.callback('🌍 Земля', 'synd_earth'), Markup.button.callback('🪐 Фортуна', 'synd_fortuna')],
         [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('👩🏻‍🚀 Зариман', 'synd_zariman')],
-        [Markup.button.callback('🍕 1999', 'synd_hex'), Markup.button.callback('🏛 Синдикаты', 'synd_relay')],
+        [Markup.button.callback('🍕 1999', 'synd_hex'), Markup.button.callback('👨‍👨‍👧‍👧 Синдикаты', 'synd_relay')],
         [Markup.button.callback('📻 Ночная Волна', 'synd_global')]
     ]);
     
-    await ctx.editMessageText('🏛 *Синдикаты*\n\nВыберите локацию:', { 
+    await ctx.editMessageText('🏛 *Фракции*\n\nВыберите локацию:', { 
         parse_mode: 'Markdown',
         ...keyboard 
     });
