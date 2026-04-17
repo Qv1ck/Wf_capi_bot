@@ -1364,4 +1364,58 @@ function checkSingleCycle(locationKey, now) {
         phase2Name = 'Холод';
         displayName = 'Фортуна';
     } else if (locationKey === 'Камбионский Дрейф') {
+        cycleDuration = location.cycle_minutes * 60 * 1000;
+        phase1Duration = location.active_duration * 60 * 1000;
+        phase1Name = 'Фасс';
+        phase2Name = 'Воум';
+        displayName = 'Камбионский Дрейф';
+    } else {
+        return;
+    }
+
+    const cyclePosition = currentTime % cycleDuration;
+    const isPhase1 = cyclePosition < phase1Duration;
+    const currentPhase = isPhase1 ? phase1Name : phase2Name;
+    const timeUntilSwitch = isPhase1
+        ? phase1Duration - cyclePosition
+        : cycleDuration - cyclePosition;
+
+    const minutesLeft = Math.floor(timeUntilSwitch / 60000);
+
+    for (const threshold of location.notifications) {
+        if (minutesLeft === threshold) {
+            const eventId = `${locationKey}_${threshold}`;
+            if (!checkedEvents.has(eventId)) {
+                checkedEvents.add(eventId);
+                saveState();
+
+                const nextPhase = isPhase1 ? phase2Name : phase1Name;
+                const message = `⏰ *${displayName}*\nЧерез ${threshold} мин: *${currentPhase}* → *${nextPhase}*`;
+                sendToSubscribers(message);
+            }
+        } else {
+            const eventId = `${locationKey}_${threshold}`;
+            if (minutesLeft > threshold + 1) {
+                checkedEvents.delete(eventId);
+            }
+        }
+    }
+}
+
+// ========================================================================
+// ЗАПУСК БОТА
+// ========================================================================
+
+setInterval(checkCycles, 60 * 1000);
+
+bot.launch().then(() => {
+    console.log('🤖 Бот запущен!');
+    loadState();
+    checkCycles();
+}).catch(err => {
+    console.error('❌ Ошибка запуска бота:', err);
+});
+
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
         
