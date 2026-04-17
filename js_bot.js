@@ -1277,7 +1277,602 @@ bot.command(['baro', 'баро', 'торговец'], async (ctx) => {
     await ctx.replyWithMarkdown(message);
 });
 
-// (Остальные команды: invasions, syndicates, search, mod, subscribe - оставляю без изменений)
+// ========================================================================
+// КОМАНДА /invasions - ВТОРЖЕНИЯ
+// ========================================================================
+
+function makeInvasionProgressBar(score, endScore) {
+    const totalBlocks = 10;
+    const normalized = score / endScore;
+    const attackerBlocks = Math.round((normalized + 1) * 5);
+    let bar = '';
+    for (let i = 0; i < totalBlocks; i++) {
+        bar += i < attackerBlocks ? '🟥' : '🟩';
+    }
+    return bar;
+}
+
+function formatInvasionDate(timestamp) {
+    const date = new Date(timestamp * 1000);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const mins = String(date.getMinutes()).padStart(2, '0');
+    return `${day}.${month} ${hours}:${mins}`;
+}
+
+function estimateInvasionEnd(inv) {
+    if (!inv.scoreHistory || inv.scoreHistory.length < 2) return null;
+    const history = inv.scoreHistory.filter(h => h[0] > 0);
+    if (history.length < 2) return null;
+    const last = history[history.length - 1];
+    const prev = history[Math.max(0, history.length - 10)];
+    const timeDiff = last[0] - prev[0];
+    const scoreDiff = last[1] - prev[1];
+    if (timeDiff <= 0 || scoreDiff === 0) return null;
+    const scorePerSec = scoreDiff / timeDiff;
+    const currentScore = inv.score;
+    const endScore = inv.endScore;
+    let remainingScore;
+    if (scorePerSec > 0) {
+        remainingScore = endScore - currentScore;
+    } else {
+        remainingScore = endScore + currentScore;
+    }
+    const remainingTime = Math.abs(remainingScore / scorePerSec);
+    return Math.floor(Date.now() / 1000 + remainingTime);
+}
+
+bot.command(['invasions', 'invasion', 'вторжения'], async (ctx) => {
+    try {
+        const ws = await getWorldstate();
+        if (!ws || !ws.invasions || !ws.invasions.data) {
+            return ctx.reply('❌ Не удалось получить данные о вторжениях.');
+        }
+        const invasions = ws.invasions.data.filter(i => Math.abs(i.score) < i.endScore);
+        if (invasions.length === 0) {
+            return ctx.reply('⚔️ Нет активных вторжений.');
+        }
+        let message = '👾 *Вторжения:*\n\n';
+        invasions.slice(0, 6).forEach(inv => {
+            const startDate = formatInvasionDate(inv.start);
+            const endEstimate = estimateInvasionEnd(inv);
+            const endDate = endEstimate ? formatInvasionDate(endEstimate) : '??:??';
+            message += `${startDate} ~ ${endDate}\n`;
+            const progressBar = makeInvasionProgressBar(inv.score, inv.endScore);
+            message += `${progressBar}\n`;
+            const rewards = [];
+            if (inv.rewardsAttacker && inv.rewardsAttacker.items) {
+                inv.rewardsAttacker.items.forEach(item => {
+                    const name = translateReward(item.name);
+                    rewards.push(item.count > 1 ? `${name} x${item.count}` : name);
+                });
+            }
+            if (inv.rewardsDefender && inv.rewardsDefender.items) {
+                inv.rewardsDefender.items.forEach(item => {
+                    const name = translateReward(item.name);
+                    rewards.push(item.count > 1 ? `${name} x${item.count}` : name);
+                });
+            }
+            if (rewards.length > 0) {
+                message += `${rewards.join(' / ')}\n`;
+            }
+            const planet = translatePlanetOnly(inv.location);
+            const progress = Math.abs(inv.score / inv.endScore * 100).toFixed(2);
+            message += `${planet} (${progress}%)\n`;
+            message += `─────────────────────────\n`;
+        });
+        await ctx.replyWithMarkdown(message);
+    } catch (error) {
+        console.error('❌ Ошибка /invasions:', error);
+        await ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+});
+
+// ========================================================================
+// КОМАНДА /syndicates - СИНДИКАТЫ
+// ========================================================================
+
+const SYNDICATES_DB = {
+    earth: {
+        name: '🌍 Земля', location: 'Земля',
+        syndicates: [
+            { id: 'cetus_hub', name: '🌅 Цетус', isSubmenu: true, location: 'Равнины Эйдолона' },
+            { id: 'kahl', name: 'Гарнизон Кахла', leader: 'Кахл-175', location: 'Лагерь Скитальца',
+              ranks: ['Посторонний', 'Брат по оружию', 'Друг', 'Защитник', 'Семья'],
+              rewards: ['Части Стинакса', 'Моды Архонтов', 'Косметика Гринир'],
+              howToRank: 'Еженедельные миссии Кахла' }
+        ]
+    },
+    cetus: {
+        name: '🌅 Цетус', location: 'Равнины Эйдолона', parentLocation: 'earth',
+        syndicates: [
+            { id: 'ostron', name: 'Острон', leader: 'Конзу',
+              ranks: ['Чужак', 'Гость', 'Знакомый', 'Друг', 'Родич'],
+              rewards: ['Части Гаруды', 'Части Ревенанта', 'ЗО (оружие ближнего боя)', 'Удочки|Наживка'],
+              howToRank: 'Задания на Равнинах Эйдолона, сдача рыбы и минералов' },
+            { id: 'quills', name: 'Перья', leader: 'Онкко',
+              ranks: ['Нейтрал', 'Мот', 'Наблюдатель', 'Медиум', 'Оператор'],
+              rewards: ['АМПы (усилитель оператора)', 'Арканы Эйдолона', 'Фокус-линзы'],
+              howToRank: 'Сдача осколков Эйдолонов (Терралист, Гантулист, Гидролист)' },
+            { id: 'ostron_ops', name: 'Операционное Снабжение', leader: 'Накак',
+              ranks: ['Нет рангов'],
+              rewards: ['Декорации', 'Маски', 'Скины оружия', 'Косметика'],
+              howToRank: 'Покупка за кредиты и ресурсы Цетуса' }
+        ]
+    },
+    fortuna: {
+        name: '🪐 Фортуна', location: 'Венера, Долина Сфер',
+        syndicates: [
+            { id: 'solaris', name: 'Объединение Солярис', leader: 'Юдико',
+              ranks: ['Нейтрал', 'Чужеземец', 'Пройдоха', 'Исполнитель', 'Приятель', 'Товарищ'],
+              rewards: ['Части Гаррудо', 'Части Барука', 'Китганы (вторичка)', 'К-драйвы', 'Рыболовное снаряжение'],
+              howToRank: 'Задания (баунти) в Долине Сфер, сдача рыбы, минералов и долговых обязательств' },
+            { id: 'vox', name: 'Глас Солярис', leader: 'Уточка',
+              ranks: ['Нейтрал', 'Оперативник', 'Агент', 'Длань', 'Инструмент', 'Тень'],
+              rewards: ['Части Хильдрин', 'Части Баррука', 'Моды', 'Части усилителя для оператора'],
+              howToRank: 'Охота на Сферы (Сфера Эксплуатации, Сфера Извлечения Прибыли)' },
+            { id: 'ventkids', name: 'Дети Труб', leader: 'Роки',
+              ranks: ['Нейтрал', 'Блестяшка', 'Ктоита', 'Свой Пацан', 'Крутой', 'Логический'],
+              rewards: ['К-драйвы', 'Части К-драйвов', 'Моды для К-драйвов', 'Косметика'],
+              howToRank: 'Гонки на К-драйвах, трюки в Долине Сфер' }
+        ]
+    },
+    deimos: {
+        name: '🦠 Деймос', location: 'Камбионский Дрейф | Санктум Анатомика',
+        syndicates: [
+            { id: 'entrati', name: 'Энтрати', leader: 'Мать',
+              ranks: ['Нейтрал', 'Незнакомец', 'Знакомый', 'Союзник', 'Друг', 'Семья'],
+              rewards: ['Части Заку', 'Петы: Вульпафила/Презалит', 'Некрамех'],
+              howToRank: 'Задания на Деймосе, Изоляционные хранилища' },
+            { id: 'necraloid', name: 'НекраЛоид', leader: 'НекраЛоид',
+              ranks: ['Нейтрал', 'Очищение: Агнезис', 'Очищение: Модус', 'Очищение: Одима'],
+              rewards: ['Части Некрамехов', 'Части Оружия для Некрамеха', 'Декорации Некрамеха'],
+              howToRank: 'Сдача матриц из Изоляционных хранилищ' },
+            { id: 'cavia', name: 'Кавия', leader: 'Лоид (Санктум)', location: 'Санктум Анатомика',
+              ranks: ['Нейтрал', 'Помощник', 'Исследователь', 'Коллега', 'Ученый', 'Просветлённый'],
+              rewards: ['Части Корвекса'],
+              howToRank: 'Архивы Энтрати, Заказы Санктум Анатомики' }
+        ]
+    },
+    hex: {
+        name: '🍕 Гекс', location: 'Хёльвания (1999)',
+        syndicates: [
+            { id: 'hex', name: 'Гекс', leader: 'Артур Найтингейл',
+              ranks: ['Нейтрал', 'Остатки', 'Свежий Ломтик', '2-за-1', 'Горячий и Свежий', 'Пицца-Вечеринка'],
+              rewards: ['Части Цита-09', 'Оружие Хёльвании', 'Моды', 'Мистики', 'Заражённое Оружие (Техноцит Кода)'],
+              howToRank: 'Заказы в Хёльвании, продажа предметов с заданий' }
+        ]
+    },
+    zariman: {
+        name: '👩🏻‍🚀 Зариман', location: 'Зариман 10-0',
+        syndicates: [
+            { id: 'holdfasts', name: 'Неукротимые', leader: 'Куинн',
+              ranks: ['Нейтрал', 'Падший', 'Хранитель', 'Страж', 'Серафим', 'Ангел'],
+              rewards: ['Джайра (заказы у Квилла)', 'Воруна|Сарофанг|Перигаль (Йонда)', 'Мистики', 'Иннодем|Феларкс|Фенмор|Прадос|Эфемеры (Кавальеро)'],
+              howToRank: 'Заказы на Заримане (Каскад, Потоп, Армагеддон), сдача перьев' }
+        ]
+    },
+    relay: {
+        name: '🏛 Синдикаты', location: 'Станции в Солнечной системе',
+        syndicates: [
+            { id: 'steel_meridian', name: 'Стальной Меридиан', leader: 'Крессы Тал',
+              ranks: ['Нейтрал', 'Беженец', 'Спаситель', 'Защитник', 'Генерал'],
+              rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
+              howToRank: 'Ношение сигила, задания синдиката, медальоны' },
+            { id: 'arbiters', name: 'Арбитры Гексиса', leader: 'Арбитр',
+              ranks: ['Нейтрал', 'Ученик', 'Максим', 'Арбитратор', 'Проводник'],
+              rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
+              howToRank: 'Ношение сигила, задания синдиката, медальоны' },
+            { id: 'cephalon_suda', name: 'Цефалон Суда', leader: 'Суда',
+              ranks: ['Нейтрал', 'Посетитель', 'Запрос', 'Гений', 'Судья'],
+              rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
+              howToRank: 'Ношение сигила, задания синдиката, медальоны' },
+            { id: 'perrin', name: 'Последовательность Перрина', leader: 'Эрго Глас',
+              ranks: ['Нейтрал', 'Стажёр', 'Аналитик', 'Эксперт', 'Партнёр'],
+              rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
+              howToRank: 'Ношение сигила, задания синдиката, медальоны' },
+            { id: 'red_veil', name: 'Красная Вуаль', leader: 'Кантис',
+              ranks: ['Нейтрал', 'Незнакомец', 'Освобождённый', 'Преданный', 'Фанатик'],
+              rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
+              howToRank: 'Ношение сигила, задания синдиката, медальоны' },
+            { id: 'new_loka', name: 'Новая Лока', leader: 'Амарин',
+              ranks: ['Нейтрал', 'Обновлённый', 'Пробуждённый', 'Титан', 'Предводитель'],
+              rewards: ['Аугменты Варфреймов', 'Оружие синдиката', 'Арчвинг моды'],
+              howToRank: 'Ношение сигила, задания синдиката, медальоны' },
+            { id: 'simaris', name: 'Цефалон Симэрис', leader: 'Симэрис',
+              ranks: ['Нет рангов'],
+              rewards: ['Чертежи варфреймов', 'Оружие', 'Моды для сканера'],
+              howToRank: 'Сканирование врагов, ежедневные задания синтеза' },
+            { id: 'conclave', name: 'Конклав', leader: 'Тешин', location: 'Зал Конклава',
+              ranks: ['Нейтрал', 'Путник', 'Охотник', 'Соискатель', 'Мастер', 'Великий Мастер'],
+              rewards: ['PvP моды', 'Скины оружия', 'Сигилы', 'Косметика', 'Кува'],
+              howToRank: 'PvP матчи (Аннигиляция, Командная Аннигиляция, Люнаро)' }
+        ]
+    },
+    global: {
+        name: '📻 Ночная Волна', location: 'Везде',
+        syndicates: [
+            { id: 'nightwave', name: 'Ночная Волна', leader: 'Ночная Нора',
+              ranks: ['30 рангов наград'],
+              rewards: ['Слоты', 'Ауры', 'Альтернативные шлемы', 'Нитаин', 'Косметика'],
+              howToRank: 'Ежедневные и еженедельные задания Ночной Волны' }
+        ]
+    }
+};
+
+bot.command(['syndicates', 'syndicate', 'синдикаты', 'синдикат'], async (ctx) => {
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('🌍 Земля', 'synd_earth'), Markup.button.callback('🪐 Фортуна', 'synd_fortuna')],
+        [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('👩🏻‍🚀 Зариман', 'synd_zariman')],
+        [Markup.button.callback('🍕 1999', 'synd_hex'), Markup.button.callback('🏛 Синдикаты', 'synd_relay')],
+        [Markup.button.callback('📻 Ночная Волна', 'synd_global')]
+    ]);
+    await ctx.reply('🏛 *Синдикаты*\n\nВыберите локацию:', { parse_mode: 'Markdown', ...keyboard });
+});
+
+bot.action('synd_back', async (ctx) => {
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('🌍 Земля', 'synd_earth'), Markup.button.callback('🪐 Фортуна', 'synd_fortuna')],
+        [Markup.button.callback('🦠 Деймос', 'synd_deimos'), Markup.button.callback('👩🏻‍🚀 Зариман', 'synd_zariman')],
+        [Markup.button.callback('🍕 1999', 'synd_hex'), Markup.button.callback('🏛 Синдикаты', 'synd_relay')],
+        [Markup.button.callback('📻 Ночная Волна', 'synd_global')]
+    ]);
+    await ctx.editMessageText('🏛 *Синдикаты*\n\nВыберите локацию:', { parse_mode: 'Markdown', ...keyboard });
+    await ctx.answerCbQuery();
+});
+
+bot.action(/^synd_(\w+)$/, async (ctx) => {
+    const locationId = ctx.match[1];
+    const locationData = SYNDICATES_DB[locationId];
+    if (!locationData) return ctx.answerCbQuery('Локация не найдена');
+
+    if (locationData.syndicates.length === 1 && !locationData.syndicates[0].isSubmenu) {
+        const syndicate = locationData.syndicates[0];
+        let message = `📜 *${syndicate.name}*\n\n`;
+        message += `📌 Локация: ${locationData.location}${syndicate.location ? ` (${syndicate.location})` : ''}\n`;
+        message += `👑 Лидер: ${syndicate.leader}\n\n`;
+        message += `📊 *Ранги:*\n`;
+        syndicate.ranks.forEach((rank, i) => { message += `${i + 1}. ${rank}\n`; });
+        message += `\n🎁 *Что можно получить:*\n`;
+        syndicate.rewards.forEach(reward => { message += `• ${reward}\n`; });
+        message += `\n💡 *Как качать:* ${syndicate.howToRank}`;
+        const backButton = locationData.parentLocation ? `synd_${locationData.parentLocation}` : 'synd_back';
+        const keyboard = Markup.inlineKeyboard([[Markup.button.callback('◀️ Назад', backButton)]]);
+        await ctx.editMessageText(message, { parse_mode: 'Markdown', ...keyboard });
+        await ctx.answerCbQuery();
+        return;
+    }
+
+    const buttons = locationData.syndicates.map(s => {
+        const loc = s.location && !s.isSubmenu ? ` (${s.location})` : '';
+        const callbackData = s.isSubmenu ? `synd_${s.id.replace('_hub', '')}` : `syndinfo_${locationId}_${s.id}`;
+        return [Markup.button.callback(`${s.name}${loc}`, callbackData)];
+    });
+    const backButton = locationData.parentLocation ? `synd_${locationData.parentLocation}` : 'synd_back';
+    buttons.push([Markup.button.callback('◀️ Назад', backButton)]);
+    const keyboard = Markup.inlineKeyboard(buttons);
+    await ctx.editMessageText(`${locationData.name}\n📍 ${locationData.location}\n\nВыберите синдикат:`, { parse_mode: 'Markdown', ...keyboard });
+    await ctx.answerCbQuery();
+});
+
+bot.action(/^syndinfo_(\w+)_(\w+)$/, async (ctx) => {
+    const locationId = ctx.match[1];
+    const syndicateId = ctx.match[2];
+    const locationData = SYNDICATES_DB[locationId];
+    if (!locationData) return ctx.answerCbQuery('Локация не найдена');
+    const syndicate = locationData.syndicates.find(s => s.id === syndicateId);
+    if (!syndicate) return ctx.answerCbQuery('Синдикат не найден');
+    let message = `📜 *${syndicate.name}*\n\n`;
+    message += `📌 Локация: ${locationData.location}${syndicate.location ? ` (${syndicate.location})` : ''}\n`;
+    message += `👑 Лидер: ${syndicate.leader}\n\n`;
+    message += `📊 *Ранги:*\n`;
+    syndicate.ranks.forEach((rank, i) => { message += `${i + 1}. ${rank}\n`; });
+    message += `\n🎁 *Что можно получить:*\n`;
+    syndicate.rewards.forEach(reward => { message += `• ${reward}\n`; });
+    message += `\n💡 *Как качать:* ${syndicate.howToRank}`;
+    const keyboard = Markup.inlineKeyboard([[Markup.button.callback('◀️ Назад', `synd_${locationId}`)]]);
+    await ctx.editMessageText(message, { parse_mode: 'Markdown', ...keyboard });
+    await ctx.answerCbQuery();
+});
+
+// ========================================================================
+// КОМАНДА /search
+// ========================================================================
+
+bot.command('search', async (ctx) => {
+    let query = ctx.message.text.replace(/\/search(@\w+)?/, '').trim();
+    if (!query) {
+        return ctx.reply('Использование: /search <название варфрейма>\n\nПример: /search Excalibur');
+    }
+    console.log(`✓ Поиск: '${query}' от ${ctx.from.first_name}`);
+    const info = await searchLocalDB(query);
+    if (info) {
+        await ctx.replyWithMarkdown(formatWarframeInfo(info));
+    } else {
+        await ctx.reply('❌ Ничего не найдено. Попробуй другой запрос.');
+    }
+});
+
+// ========================================================================
+// КОМАНДА /mod - ПОИСК МОДОВ
+// ========================================================================
+
+function searchMod(query) {
+    const queryLower = query.toLowerCase();
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (key.toLowerCase() === queryLower) return mod;
+    }
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (key.toLowerCase().startsWith(queryLower)) return mod;
+    }
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (key.toLowerCase().includes(queryLower)) return mod;
+    }
+    return null;
+}
+
+function formatModInfo(mod) {
+    let mainName = mod.name;
+    let secondName = '';
+    if (mod.nameRu && mod.nameRu !== mod.name && !mod.nameRu.includes('|COLOR|')) {
+        mainName = mod.nameRu;
+        secondName = mod.name;
+    }
+    let message = `🔧 *${mainName}*`;
+    if (secondName) message += ` _(${secondName})_`;
+    message += '\n\n';
+    if (mod.levelStats && mod.levelStats.length > 0) {
+        message += `📊 *Характеристики:*\n`;
+        const maxRank = mod.levelStats.length - 1;
+        message += `Ранг 0: ${mod.levelStats[0].stats.join(', ')}\n`;
+        message += `Ранг ${maxRank}: ${mod.levelStats[maxRank].stats.join(', ')}\n`;
+    }
+    if (mod.drops && mod.drops.length > 0) {
+        message += `\n📌 *Где найти:*\n`;
+        const sortedDrops = [...mod.drops].sort((a, b) => b.chance - a.chance);
+        sortedDrops.slice(0, 5).forEach(drop => {
+            const chance = (drop.chance * 100).toFixed(2);
+            message += `• ${drop.location}: ${chance}%\n`;
+        });
+        if (mod.drops.length > 5) message += `_...и ещё ${mod.drops.length - 5} локаций_\n`;
+    } else {
+        message += `\n📌 *Где найти:*\nНет информации\n`;
+    }
+    return message;
+}
+
+bot.command('mod', async (ctx) => {
+    let query = ctx.message.text.replace(/\/mod(@\w+)?/, '').trim();
+    if (!query) {
+        return ctx.reply(
+            '🔧 *Поиск модов*\n\nИспользование: `/mod <название>`\n\nПримеры:\n`/mod Зазубрины`\n`/mod Serration`\n`/mod Адаптация`',
+            { parse_mode: 'Markdown' }
+        );
+    }
+    console.log(`✓ Поиск мода: '${query}' от ${ctx.from.first_name}`);
+    const mod = searchMod(query);
+    if (mod) {
+        await ctx.replyWithMarkdown(formatModInfo(mod), { disable_web_page_preview: true });
+    } else {
+        await ctx.reply('❌ Мод не найден. Попробуйте другое название.');
+    }
+});
+
+// ========================================================================
+// ПОДПИСКИ
+// ========================================================================
+
+bot.command('subscribe', (ctx) => {
+    const chatId = ctx.chat.id;
+    if (!subscribers.has(chatId)) {
+        subscribers.add(chatId);
+        saveState();
+        console.log(`✓ Новый подписчик: ${ctx.from.first_name} (ID: ${chatId})`);
+        ctx.reply('✅ Вы подписаны на уведомления о событиях');
+    } else {
+        ctx.reply('ℹ️ Вы уже подписаны на уведомления.');
+    }
+});
+
+bot.command('unsubscribe', (ctx) => {
+    const chatId = ctx.chat.id;
+    if (subscribers.has(chatId)) {
+        subscribers.delete(chatId);
+        saveState();
+        ctx.reply('❌ Вы отписаны от уведомлений.');
+    } else {
+        ctx.reply('ℹ️ Вы не подписаны на уведомления.');
+    }
+});
+
+// ========================================================================
+// CALLBACK КНОПКИ
+// ========================================================================
+
+bot.action('cmd_cycles', async (ctx) => {
+    await ctx.answerCbQuery();
+    try {
+        await ctx.replyWithMarkdown(getFormattedCycles());
+    } catch (error) {
+        await ctx.reply('❌ Произошла ошибка при получении циклов');
+    }
+});
+
+bot.action('cmd_search', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply(
+        '🔍 *Поиск варфрейма*\n\nИспользуйте: `/search <название>`\n\nПримеры:\n`/search Экс` (найдёт Excalibur)\n`/search Volt`\n`/search Нокко`',
+        { parse_mode: 'Markdown' }
+    );
+});
+
+bot.action('cmd_weapon', async (ctx) => {
+    await ctx.answerCbQuery();
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('🚀 Основное', 'weapon_primary')],
+        [Markup.button.callback('🔫 Вторичное', 'weapon_secondary')],
+        [Markup.button.callback('🪓 Ближнее', 'weapon_melee')]
+    ]);
+    ctx.reply('🔫 Выберите тип оружия:', keyboard);
+});
+
+bot.action('weapon_primary', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🚀 *Основное оружие*\n\nИспользуйте: `/primary <название>`', { parse_mode: 'Markdown' });
+});
+
+bot.action('weapon_secondary', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔫 *Вторичное оружие*\n\nИспользуйте: `/secondary <название>`', { parse_mode: 'Markdown' });
+});
+
+bot.action('weapon_melee', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🪓 *Ближнее оружие*\n\nИспользуйте: `/melee <название>`', { parse_mode: 'Markdown' });
+});
+
+bot.action('cmd_chain_guns', async (ctx) => {
+    await ctx.answerCbQuery();
+    const currentWeek = getCurrentDuviriWeek();
+    const weekWeapons = getWeekWeapons(currentWeek);
+    let message = `🌀 *ЦЕПЬ ДУВИРИ (ОРУЖИЕ)*\n\n📅 *Текущая неделя:* ${currentWeek} из 8\n\n⚡ *Доступные Инкарноны:*\n`;
+    message += weekWeapons.join('\n');
+    await ctx.replyWithMarkdown(message);
+});
+
+bot.action('cmd_chain_frame', async (ctx) => {
+    await ctx.answerCbQuery();
+    const currentWeek = getCurrentDuviriWarframeWeek();
+    const weekFrames = [];
+    for (const [key, warframe] of Object.entries(warframesDuviri)) {
+        if (warframe.week === currentWeek) weekFrames.push(`• *${warframe.name}* - ${warframe.helminth}`);
+    }
+    let message = `🤖 *ЦЕПЬ ДУВИРИ (ВАРФРЕЙМЫ)*\n\n📅 *Текущая неделя:* ${currentWeek} из 11\n\n⚡ *Доступные варфреймы:*\n`;
+    message += weekFrames.join('\n');
+    await ctx.replyWithMarkdown(message);
+});
+
+bot.action('cmd_subscribe', async (ctx) => {
+    await ctx.answerCbQuery();
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback('✅ Подписаться', 'sub_yes')],
+        [Markup.button.callback('❌ Отписаться', 'sub_no')]
+    ]);
+    ctx.reply('🔔 Управление подписками:', keyboard);
+});
+
+bot.action('sub_yes', async (ctx) => {
+    await ctx.answerCbQuery('✅ Подписка оформлена!');
+    const chatId = ctx.chat.id;
+    if (!subscribers.has(chatId)) { subscribers.add(chatId); saveState(); }
+    ctx.reply('✅ Вы подписаны на уведомления');
+});
+
+bot.action('sub_no', async (ctx) => {
+    await ctx.answerCbQuery('❌ Отписка выполнена');
+    const chatId = ctx.chat.id;
+    if (subscribers.has(chatId)) { subscribers.delete(chatId); saveState(); }
+    ctx.reply('❌ Вы отписаны от уведомлений');
+});
+
+// ========================================================================
+// INLINE MODE
+// ========================================================================
+
+function searchModsInline(query, limit = 25) {
+    const queryLower = query.toLowerCase();
+    const results = [];
+    const seen = new Set();
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (seen.has(mod.name)) continue;
+        if (key.toLowerCase() === queryLower || mod.name.toLowerCase() === queryLower) { results.push(mod); seen.add(mod.name); }
+    }
+    for (const [key, mod] of Object.entries(modsDB)) {
+        if (seen.has(mod.name)) continue;
+        if (key.toLowerCase().startsWith(queryLower) || mod.name.toLowerCase().startsWith(queryLower) || (mod.nameRu && mod.nameRu.toLowerCase().startsWith(queryLower))) { results.push(mod); seen.add(mod.name); }
+        if (results.length >= limit) break;
+    }
+    if (results.length < limit) {
+        for (const [key, mod] of Object.entries(modsDB)) {
+            if (seen.has(mod.name)) continue;
+            if (key.toLowerCase().includes(queryLower) || mod.name.toLowerCase().includes(queryLower) || (mod.nameRu && mod.nameRu.toLowerCase().includes(queryLower))) { results.push(mod); seen.add(mod.name); }
+            if (results.length >= limit) break;
+        }
+    }
+    return results;
+}
+
+function searchWarframesInline(query, limit = 10) {
+    const queryLower = query.toLowerCase();
+    const results = [];
+    const seen = new Set();
+    for (const [englishName, aliases] of Object.entries(nameAliasesDB)) {
+        if (seen.has(englishName)) continue;
+        const matchedAlias = aliases.find(alias => alias.toLowerCase().includes(queryLower) || alias.toLowerCase().startsWith(queryLower));
+        if (matchedAlias && abilitiesDB[englishName]) { results.push({ name: englishName, nameRu: aliases[0], abilities: abilitiesDB[englishName] }); seen.add(englishName); }
+        if (results.length >= limit) break;
+    }
+    for (const [name, abilities] of Object.entries(abilitiesDB)) {
+        if (seen.has(name)) continue;
+        if (name.toLowerCase().includes(queryLower)) { const aliases = nameAliasesDB[name]; results.push({ name, nameRu: aliases ? aliases[0] : null, abilities }); seen.add(name); }
+        if (results.length >= limit) break;
+    }
+    return results;
+}
+
+function formatWarframeInfoInline(wfData) {
+    let title = wfData.name;
+    if (wfData.nameRu) title = `${wfData.nameRu} (${wfData.name})`;
+    let message = `🤖 *${title}*\n\n⚡ *Способности:*\n`;
+    if (wfData.abilities && wfData.abilities.length > 0) {
+        wfData.abilities.forEach((ability, index) => { message += `${index + 1}. ${ability}\n`; });
+    }
+    return message;
+}
+
+function getModShortDescription(mod) {
+    let desc = mod.typeRu || mod.type || '';
+    if (mod.levelStats && mod.levelStats.length > 0) {
+        const maxStats = mod.levelStats[mod.levelStats.length - 1].stats;
+        if (maxStats && maxStats[0]) desc += ` • ${maxStats[0]}`;
+    }
+    return desc.substring(0, 100);
+}
+
+bot.on('inline_query', async (ctx) => {
+    const query = ctx.inlineQuery.query.trim().toLowerCase();
+    if (!query || query.length < 2) return;
+    const results = [];
+    const foundMods = searchModsInline(query, 25);
+    foundMods.forEach((mod, index) => {
+        const title = mod.nameRu !== mod.name ? `${mod.nameRu} (${mod.name})` : mod.name;
+        results.push({
+            type: 'article',
+            id: `mod_${index}_${mod.name.replace(/\s/g, '_')}`,
+            title: `🔧 ${title}`,
+            description: getModShortDescription(mod),
+            input_message_content: { message_text: formatModInfo(mod), parse_mode: 'Markdown', disable_web_page_preview: true }
+        });
+    });
+    const foundWarframes = searchWarframesInline(query, 10);
+    foundWarframes.forEach((wf, index) => {
+        const displayName = wf.nameRu ? `${wf.nameRu} (${wf.name})` : wf.name;
+        const abilitiesPreview = wf.abilities ? wf.abilities.slice(0, 2).join(', ') + '...' : '';
+        results.push({
+            type: 'article',
+            id: `wf_${index}_${wf.name.replace(/\s/g, '_')}`,
+            title: `🤖 ${displayName}`,
+            description: abilitiesPreview,
+            input_message_content: { message_text: formatWarframeInfoInline(wf), parse_mode: 'Markdown' }
+        });
+    });
+    try {
+        await ctx.answerInlineQuery(results.slice(0, 50), { cache_time: 300, is_personal: false });
+    } catch (error) {
+        console.error('❌ Ошибка inline:', error.message);
+    }
+});
 
 // ========================================================================
 // ← НОВОЕ: CALLBACK ДЛЯ АРБИТРАЖЕЙ
@@ -1406,16 +2001,41 @@ function checkSingleCycle(locationKey, now) {
 // ЗАПУСК БОТА
 // ========================================================================
 
-setInterval(checkCycles, 60 * 1000);
+console.log('='.repeat(60));
+console.log('🤖 WARFRAME BOT V3 FINAL (LOCAL + ARBITRATION)');
+console.log('='.repeat(60));
+console.log(`✓ Подписчики: ${subscribers.size}`);
+console.log('='.repeat(60));
 
-bot.launch().then(() => {
-    console.log('🤖 Бот запущен!');
-    loadState();
-    checkCycles();
-}).catch(err => {
-    console.error('❌ Ошибка запуска бота:', err);
+loadArbitrationData().then(() => {
+    bot.launch().then(() => {
+        console.log('✓ 🚀 Бот запущен и готов к работе!');
+        console.log('='.repeat(60));
+        checkCycles();
+    }).catch(err => {
+        console.error('❌ Ошибка запуска:', err);
+        process.exit(1);
+    });
 });
 
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+checkIntervals.push(setInterval(checkCycles, 60000));
+checkIntervals.push(setInterval(saveState, 5 * 60000));
+
+process.once('SIGINT', () => {
+    console.log('\n' + '='.repeat(60));
+    console.log('✓ Бот остановлен');
+    saveState();
+    checkIntervals.forEach(interval => clearInterval(interval));
+    console.log('='.repeat(60));
+    bot.stop('SIGINT');
+});
+
+process.once('SIGTERM', () => {
+    console.log('\n' + '='.repeat(60));
+    console.log('✓ Бот остановлен системой');
+    saveState();
+    checkIntervals.forEach(interval => clearInterval(interval));
+    console.log('='.repeat(60));
+    bot.stop('SIGTERM');
+});
         
