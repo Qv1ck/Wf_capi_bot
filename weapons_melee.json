@@ -328,7 +328,8 @@
       "Дестреза Прайм"
     ],
     "incarnon": {
-      "available": false
+      "available": true,
+      "week": 9
     }
   },
   "dokrahm": {
@@ -459,7 +460,8 @@
       "Обекс"
     ],
     "incarnon": {
-      "available": false
+      "available": true,
+      "week": 9
     }
   },
   "rakta_dark_dagger": {

@@ -189,7 +189,8 @@
       "Вектис Прайм"
     ],
     "incarnon": {
-      "available": false
+      "available": true,
+      "week": 9
     }
   },
   "lanka": {

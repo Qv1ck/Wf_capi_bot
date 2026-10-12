@@ -473,50 +473,12 @@ function loadState() {
 // ФУНКЦИИ РАСЧЁТА НЕДЕЛЬ ДУВИРИ
 // ========================================================================
 
-const WARFRAME_KNOWN_DATE = new Date('2025-11-24T00:00:00Z');
-const WARFRAME_KNOWN_WEEK = 3;
-
-const WEAPON_KNOWN_DATE = new Date('2025-11-24T00:00:00Z');
-const WEAPON_KNOWN_WEEK = 3;
-
-function getCurrentDuviriWarframeWeek() {
-    const now = new Date();
-    const diffTime = now - WARFRAME_KNOWN_DATE;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffWeeks = Math.floor(diffDays / 7);
-    
-    let currentWeek = WARFRAME_KNOWN_WEEK + diffWeeks;
-    currentWeek = ((currentWeek - 1) % 11) + 1;
-    
-    return currentWeek;
-}
-
-function getCurrentDuviriWeek() {
-    const now = new Date();
-    const diffTime = now - WEAPON_KNOWN_DATE;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffWeeks = Math.floor(diffDays / 7);
-    
-    let currentWeek = WEAPON_KNOWN_WEEK + diffWeeks;
-    currentWeek = ((currentWeek - 1) % 8) + 1;
-    
-    return currentWeek;
-}
-
-function getWeekWeapons(week) {
-    const weeklyRotation = {
-        1: ['Брэйтон', 'Лато', 'Скана', 'Парис', 'Кунай'],
-        2: ['Боар', 'Гаммакор', 'Ангструм', 'Горгон', 'Анку'],
-        3: ['Бо', 'Латрон', 'Фурис', 'Фуракс', 'Стран'],
-        4: ['Лекс', 'Магистр', 'Болтор', 'Бронко', 'Керамический кинжал'],
-        5: ['Торид', 'Двойные Токсоцисты', 'Двойные Ихоры', 'Митра', 'Атомос'],
-        6: ['Ак и Брант', 'Сома', 'Васто', 'Нами Соло', 'Берстон'],
-        7: ['Зайлок', 'Сибирь', 'Страх', 'Отчаяние', 'Ненависть'],
-        8: ['Дера', 'Сибарис', 'Цестра', 'Сикарус', 'Окина']
-    };
-    
-    return weeklyRotation[week] || [];
-}
+const {
+    STEEL_PATH_ROTATION_LENGTH,
+    getCurrentDuviriWarframeWeek,
+    getCurrentDuviriWeek,
+    getWeekWeapons
+} = require('./duviri_rotations');
 
 // ========================================================================
 // ФУНКЦИИ ДЛЯ ОРУЖИЯ
@@ -555,9 +517,9 @@ function formatWeaponInfo(weapon, type) {
         message += `📅 *Неделя:* ${weaponWeek}\n`;
         
         if (isCurrentWeek) {
-            message += `✅ *Статус:* Доступен сейчас! (${currentWeek}-я из 8-ми)\n`;
+            message += `✅ *Статус:* Доступен сейчас! (${currentWeek}-я из ${STEEL_PATH_ROTATION_LENGTH})\n`;
         } else {
-            message += `⏳ *Статус:* Будет доступен на ${weaponWeek} неделе (сейчас ${currentWeek} из 8)\n`;
+            message += `⏳ *Статус:* Будет доступен на ${weaponWeek} неделе (сейчас ${currentWeek} из ${STEEL_PATH_ROTATION_LENGTH})\n`;
         }
         
         const currentWeekWeapons = getWeekWeapons(currentWeek);
@@ -1128,7 +1090,7 @@ bot.command('chain_guns', async (ctx) => {
     const weekWeapons = getWeekWeapons(currentWeek);
     
     let message = `🌀 *ЦЕПЬ ДУВИРИ (ОРУЖИЕ)*\n\n`;
-    message += `📅 *Текущая неделя:* ${currentWeek} из 8\n\n`;
+    message += `📅 *Текущая неделя:* ${currentWeek} из ${STEEL_PATH_ROTATION_LENGTH}\n\n`;
     message += `⚡ *Доступные Инкарноны:*\n`;
     message += weekWeapons.join('\n');
     
@@ -1736,7 +1698,7 @@ bot.action('cmd_chain_guns', async (ctx) => {
     await ctx.answerCbQuery();
     const currentWeek = getCurrentDuviriWeek();
     const weekWeapons = getWeekWeapons(currentWeek);
-    let message = `🌀 *ЦЕПЬ ДУВИРИ (ОРУЖИЕ)*\n\n📅 *Текущая неделя:* ${currentWeek} из 8\n\n⚡ *Доступные Инкарноны:*\n`;
+    let message = `🌀 *ЦЕПЬ ДУВИРИ (ОРУЖИЕ)*\n\n📅 *Текущая неделя:* ${currentWeek} из ${STEEL_PATH_ROTATION_LENGTH}\n\n⚡ *Доступные Инкарноны:*\n`;
     message += weekWeapons.join('\n');
     await ctx.replyWithMarkdown(message);
 });
