@@ -5,7 +5,8 @@
   "main": "js_bot.js",
   "scripts": {
     "start": "node js_bot.js",
-    "test": "node warframe_api.js"
+    "test": "node warframe_api.js",
+    "test:arbitrations": "node test_arbitrations.js && node test_arbitration_handlers.js"
   },
   "keywords": [
     "warframe",

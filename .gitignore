@@ -172,3 +172,6 @@ images/
 NOTES.md
 TODO.md
 CHANGELOG_local.md
+
+# Кэш прогноза арбитражей
+arbitration_cache.json

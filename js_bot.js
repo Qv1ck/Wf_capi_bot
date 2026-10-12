@@ -15,9 +15,10 @@ let worldstateCache = null;
 let worldstateCacheTime = 0;
 const CACHE_DURATION = 60000; // 60 секунд
 
-// ← НОВОЕ: Данные арбитражей
+const { createArbitrations } = require('./arbitrations');
+const arbitrationProvider = createArbitrations();
+const BOT_BUILD = '2026-10-12-arbitrations-v1';
 let arbitrationData = [];
-const ARBITRATION_URL = 'https://raw.githubusercontent.com/ix1le/warframe-arbitrations/main/arbys.json';
 
 // Функция запроса к API
 function fetchTennoAPI() {
@@ -76,74 +77,18 @@ async function getWorldstate() {
 // ← НОВОЕ: ФУНКЦИИ ДЛЯ АРБИТРАЖЕЙ
 // ========================================================================
 
-function fetchArbitrationData() {
-    return new Promise((resolve, reject) => {
-        const options = {
-            hostname: 'raw.githubusercontent.com',
-            path: '/ix1le/warframe-arbitrations/main/arbys.json',
-            method: 'GET',
-            headers: { 'User-Agent': 'WarframeBot/1.0' }
-        };
-        
-        const req = https.request(options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                if (res.statusCode === 200) {
-                    try {
-                        resolve(JSON.parse(data));
-                    } catch (e) {
-                        reject(new Error('JSON parse error'));
-                    }
-                } else {
-                    reject(new Error(`HTTP ${res.statusCode}`));
-                }
-            });
-        });
-        
-        req.on('error', reject);
-        req.setTimeout(10000, () => {
-            req.destroy();
-            reject(new Error('Timeout'));
-        });
-        req.end();
-    });
-}
-
 async function loadArbitrationData() {
-    try {
-        console.log('📥 Загрузка расписания арбитражей...');
-        arbitrationData = await fetchArbitrationData();
-        console.log(`✓ Загружено ${arbitrationData.length} арбитражей`);
-        return true;
-    } catch (error) {
-        console.error('❌ Ошибка загрузки арбитражей:', error.message);
-        return false;
-    }
+    const result = await arbitrationProvider.refresh();
+    arbitrationData = arbitrationProvider.missions();
+    return !result.error;
 }
 
-function getCurrentArbitration() {
-    if (arbitrationData.length === 0) {
-        return { error: 'Данные арбитражей не загружены' };
-    }
+function getCurrentArbitration() { return arbitrationProvider.current(); }
 
-    const now = Math.floor(Date.now() / 1000);
-    
-    const current = arbitrationData.find((arb, index) => {
-        const nextArb = arbitrationData[index + 1];
-        return arb.start <= now && (!nextArb || nextArb.start > now);
-    });
-
-    if (!current) {
-        return { error: 'Текущий арбитраж не найден' };
-    }
-
-    const currentIndex = arbitrationData.indexOf(current);
-    const upcoming = arbitrationData.slice(currentIndex + 1, currentIndex + 4);
-
-    return { current, upcoming };
+function formatArbitrationStatus(result) {
+    const checked = new Date(result.fetchedAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+    return `\n\n📋 Расписание browse.wf — прогноз сообщества\n🕒 Загружено: ${checked} МСК${result.fromCache ? ' (кэш)' : ''}`;
 }
-
 function formatArbitrationInfo(arb, isCurrent = false) {
     const now = Math.floor(Date.now() / 1000);
     
@@ -202,7 +147,7 @@ function checkArbitrationNotifications() {
         const timeLeft = current.start + 3600 - now;
         const minutesLeft = Math.floor(timeLeft / 60);
 
-        if ([10, 5].includes(minutesLeft)) {
+        if ([10, 5].includes(minutesLeft) && result.upcoming.length > 0) {
             const eventId = `arbitration_${current.start}_${minutesLeft}`;
             
             if (!checkedEvents.has(eventId)) {
@@ -422,6 +367,7 @@ bot.telegram.setMyCommands([
     { command: 'fissures', description: '☢️ Разломы Бездны' },
     { command: 'sortie', description: '📋 Вылазки' },
     { command: 'arbitration', description: '🎯 Арбитражи' },
+    { command: 'version', description: '🔎 Версия сборки и состояние данных' },
     { command: 'baro', description: '🚑 Баро Ки\'Тиир' },
     { command: 'invasions', description: '⚔️ Вторжения' },
     { command: 'syndicates', description: '📜 Фракции' },
@@ -940,6 +886,12 @@ function formatWarframeInfo(info) {
 // КОМАНДА /start
 // ========================================================================
 
+bot.command('version', (ctx) => {
+    const result = getCurrentArbitration();
+    let message = `Сборка: ${BOT_BUILD}\nСтальной путь: ${STEEL_PATH_ROTATION_LENGTH} недель`;
+    message += result.error ? '\nАрбитражи: данные пока недоступны' : `\nАрбитражи: расписание загружено${result.fromCache ? ' из кэша' : ''}`;
+    return ctx.reply(message);
+});
 bot.start((ctx) => {
     const message = 
         `🤖 *Warf_bot*\n\n` +
@@ -976,6 +928,7 @@ bot.command(['arbitration', 'арбитраж'], async (ctx) => {
     
     console.log(`✓ /arbitration от ${ctx.from.first_name}` + (args ? ` (${args})` : ''));
     
+    await loadArbitrationData();
     const result = getCurrentArbitration();
     
     if (result.error) {
@@ -984,7 +937,7 @@ bot.command(['arbitration', 'арбитраж'], async (ctx) => {
 
     if (args) {
         const now = Math.floor(Date.now() / 1000);
-        const currentIndex = arbitrationData.indexOf(result.current);
+        const currentIndex = arbitrationData.findIndex(arb => arb.start === result.current.start);
         
         const filtered = arbitrationData
             .slice(currentIndex)
@@ -1003,6 +956,7 @@ bot.command(['arbitration', 'арбитраж'], async (ctx) => {
             if (index < filtered.length - 1) message += '\n';
         });
         
+        message += formatArbitrationStatus(result);
         return ctx.replyWithMarkdown(message);
     }
 
@@ -1015,7 +969,8 @@ bot.command(['arbitration', 'арбитраж'], async (ctx) => {
         if (index < result.upcoming.length - 1) message += '\n';
     });
 
-    ctx.replyWithMarkdown(message);
+    message += formatArbitrationStatus(result);
+    await ctx.replyWithMarkdown(message);
 });
 
 // ========================================================================
@@ -1843,6 +1798,7 @@ bot.on('inline_query', async (ctx) => {
 bot.action('cmd_arbitration', async (ctx) => {
     await ctx.answerCbQuery();
     
+    await loadArbitrationData();
     const result = getCurrentArbitration();
     
     if (result.error) {
@@ -1858,6 +1814,7 @@ bot.action('cmd_arbitration', async (ctx) => {
         if (index < result.upcoming.length - 1) message += '\n';
     });
 
+    message += formatArbitrationStatus(result);
     await ctx.replyWithMarkdown(message);
 });
 
@@ -1969,16 +1926,22 @@ console.log('='.repeat(60));
 console.log(`✓ Подписчики: ${subscribers.size}`);
 console.log('='.repeat(60));
 
-loadArbitrationData().then(() => {
-    bot.launch().then(() => {
-        console.log('✓ 🚀 Бот запущен и готов к работе!');
-        console.log('='.repeat(60));
-        checkCycles();
-    }).catch(err => {
-        console.error('❌ Ошибка запуска:', err);
-        process.exit(1);
-    });
+console.log(`✓ Сборка: ${BOT_BUILD}`);
+// Недоступность прогноза не задерживает подключение к Telegram.
+loadArbitrationData().catch(error => console.error('Арбитражи:', error.message));
+bot.launch().then(() => {
+    console.log('✓ 🚀 Бот запущен и готов к работе!');
+    console.log('='.repeat(60));
+    checkCycles();
+}).catch(err => {
+    if (err.response && err.response.error_code === 409) {
+        console.error('❌ Telegram 409: другой процесс получает сообщения с этим BOT_TOKEN. Остановите старый экземпляр на хостинге и запустите только один.');
+    } else { console.error('❌ Ошибка запуска:', err.message); }
+    process.exit(1);
 });
+checkIntervals.push(setInterval(() => {
+    loadArbitrationData().catch(error => console.error('Арбитражи:', error.message));
+}, 3 * 60000));
 
 checkIntervals.push(setInterval(checkCycles, 60000));
 checkIntervals.push(setInterval(saveState, 5 * 60000));
@@ -2000,4 +1963,3 @@ process.once('SIGTERM', () => {
     console.log('='.repeat(60));
     bot.stop('SIGTERM');
 });
-        

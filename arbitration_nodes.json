@@ -1,0 +1,530 @@
+{
+  "SettlementNode11": {
+    "value": "Gulliver (Phobos)",
+    "enemy": "Corpus",
+    "type": "Defense",
+    "nameRu": "Gulliver (Фобос)"
+  },
+  "ClanNode10": {
+    "value": "Memphis (Phobos)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defection",
+    "nameRu": "Memphis (Фобос)"
+  },
+  "SolNode64": {
+    "value": "Umbriel (Uranus)",
+    "enemy": "Grineer",
+    "type": "Interception",
+    "nameRu": "Umbriel (Уран)"
+  },
+  "SolNode305": {
+    "value": "Stöfler (Lua)",
+    "enemy": "Grineer",
+    "type": "Defense",
+    "nameRu": "Stöfler (Луа)"
+  },
+  "SolNode23": {
+    "value": "Cytherean (Venus)",
+    "enemy": "Corpus",
+    "type": "Interception",
+    "nameRu": "Cytherean (Венера)"
+  },
+  "SolNode123": {
+    "value": "V Prime (Venus)",
+    "enemy": "Corpus",
+    "type": "Survival",
+    "nameRu": "V Prime (Венера)"
+  },
+  "SolNode26": {
+    "value": "Lith (Earth)",
+    "enemy": "Grineer",
+    "type": "Defense",
+    "nameRu": "Lith (Земля)"
+  },
+  "SolNode172": {
+    "value": "Xini (Eris)",
+    "enemy": "Infested",
+    "type": "Interception",
+    "nameRu": "Xini (Эрида)"
+  },
+  "SolNode718": {
+    "value": "Cambire (Deimos)",
+    "enemy": "The Murmur",
+    "type": "Alchemy",
+    "nameRu": "Cambire (Deimos)"
+  },
+  "ClanNode5": {
+    "value": "Cameria (Jupiter)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Cameria (Юпитер)"
+  },
+  "SolNode149": {
+    "value": "Casta (Ceres)",
+    "enemy": "Grineer",
+    "type": "Defense",
+    "nameRu": "Casta (Церера)"
+  },
+  "SolNode711": {
+    "value": "Terrorem (Deimos)",
+    "enemy": "Infested",
+    "type": "Survival",
+    "nameRu": "Terrorem (Деймос)"
+  },
+  "ClanNode16": {
+    "value": "Ur (Uranus)",
+    "enemy": "Infested",
+    "type": "Dark Sector Disruption",
+    "nameRu": "Ur (Уран)"
+  },
+  "SolNode308": {
+    "value": "Apollo (Lua)",
+    "enemy": "Corpus",
+    "type": "Disruption",
+    "nameRu": "Apollo (Луа)"
+  },
+  "ClanNode19": {
+    "value": "Zabala (Eris)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Zabala (Эрида)"
+  },
+  "SolNode216": {
+    "value": "Valefor (Europa)",
+    "enemy": "Corpus",
+    "type": "Excavation",
+    "nameRu": "Valefor (Европа)"
+  },
+  "SolNode72": {
+    "value": "Outer Terminus (Pluto)",
+    "enemy": "Corpus",
+    "type": "Defense",
+    "nameRu": "Outer Terminus (Плутон)"
+  },
+  "SolNode302": {
+    "value": "Tycho (Lua)",
+    "enemy": "Corpus",
+    "type": "Survival",
+    "nameRu": "Tycho (Луа)"
+  },
+  "SolNode146": {
+    "value": "Draco (Ceres)",
+    "enemy": "Grineer",
+    "type": "Survival",
+    "nameRu": "Draco (Церера)"
+  },
+  "ClanNode8": {
+    "value": "Kadesh (Mars)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Kadesh (Марс)"
+  },
+  "ClanNode1": {
+    "value": "Malva (Venus)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Malva (Венера)"
+  },
+  "SolNode195": {
+    "value": "Hydron (Sedna)",
+    "enemy": "Grineer",
+    "type": "Defense",
+    "nameRu": "Hydron (Седна)"
+  },
+  "SolNode118": {
+    "value": "Laomedeia (Neptune)",
+    "enemy": "Corpus",
+    "type": "Disruption",
+    "nameRu": "Laomedeia (Нептун)"
+  },
+  "SolNode106": {
+    "value": "Alator (Mars)",
+    "enemy": "Grineer",
+    "type": "Interception",
+    "nameRu": "Alator (Марс)"
+  },
+  "SolNode101": {
+    "value": "Kiliken (Venus)",
+    "enemy": "Corpus",
+    "type": "Excavation",
+    "nameRu": "Kiliken (Венера)"
+  },
+  "ClanNode22": {
+    "value": "Seimeni (Ceres)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Seimeni (Церера)"
+  },
+  "SolNode187": {
+    "value": "Selkie (Sedna)",
+    "enemy": "Grineer",
+    "type": "Survival",
+    "nameRu": "Selkie (Седна)"
+  },
+  "ClanNode17": {
+    "value": "Assur (Uranus)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Assur (Уран)"
+  },
+  "SolNode17": {
+    "value": "Proteus (Neptune)",
+    "enemy": "Corpus",
+    "type": "Defense",
+    "nameRu": "Proteus (Нептун)"
+  },
+  "SolNode405": {
+    "value": "Ani (Void)",
+    "enemy": "Orokin",
+    "type": "Survival",
+    "nameRu": "Ani (Бездна)"
+  },
+  "SolNode85": {
+    "value": "Gaia (Earth)",
+    "enemy": "Grineer",
+    "type": "Interception",
+    "nameRu": "Gaia (Земля)"
+  },
+  "SolNode707": {
+    "value": "Hyf (Deimos)",
+    "enemy": "Infested",
+    "type": "Defense",
+    "nameRu": "Hyf (Деймос)"
+  },
+  "SolNode211": {
+    "value": "Ose (Europa)",
+    "enemy": "Corpus",
+    "type": "Interception",
+    "nameRu": "Ose (Европа)"
+  },
+  "SolNode412": {
+    "value": "Mithra (Void)",
+    "enemy": "Orokin",
+    "type": "Interception",
+    "nameRu": "Mithra (Бездна)"
+  },
+  "ClanNode21": {
+    "value": "Kelashin (Neptune)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Kelashin (Нептун)"
+  },
+  "ClanNode20": {
+    "value": "Yursa (Neptune)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defection",
+    "nameRu": "Yursa (Нептун)"
+  },
+  "SolNode39": {
+    "value": "Everest (Earth)",
+    "enemy": "Grineer",
+    "type": "Excavation",
+    "nameRu": "Эверест (Земля)"
+  },
+  "SolNode224": {
+    "value": "Odin (Mercury)",
+    "enemy": "Grineer",
+    "type": "Interception",
+    "nameRu": "Odin (Меркурий)"
+  },
+  "ClanNode14": {
+    "value": "Amarna (Sedna)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Amarna (Седна)"
+  },
+  "SolNode122": {
+    "value": "Stephano (Uranus)",
+    "enemy": "Grineer",
+    "type": "Defense",
+    "nameRu": "Stephano (Уран)"
+  },
+  "ClanNode24": {
+    "value": "Sechura (Pluto)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Sechura (Плутон)"
+  },
+  "ClanNode11": {
+    "value": "Zeugma (Phobos)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Zeugma (Фобос)"
+  },
+  "SolNode450": {
+    "value": "Tyana Pass (Mars)",
+    "enemy": "Crossfire",
+    "type": "Mirror Defense",
+    "nameRu": "Tyana Pass (Mars)"
+  },
+  "ClanNode25": {
+    "value": "Hieracon (Pluto)",
+    "enemy": "Infested",
+    "type": "Dark Sector Excavation",
+    "nameRu": "Hieracon (Плутон)"
+  },
+  "SolNode16": {
+    "value": "Augustus (Mars)",
+    "enemy": "Grineer",
+    "type": "Excavation",
+    "nameRu": "Augustus (Марс)"
+  },
+  "SolNode43": {
+    "value": "Cerberus (Pluto)",
+    "enemy": "Corpus",
+    "type": "Interception",
+    "nameRu": "Cerberus (Плутон)"
+  },
+  "SolNode409": {
+    "value": "Mot (Void)",
+    "enemy": "Orokin",
+    "type": "Survival",
+    "nameRu": "Mot (Бездна)"
+  },
+  "ClanNode13": {
+    "value": "Piscinas (Saturn)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Piscinas (Сатурн)"
+  },
+  "SolNode18": {
+    "value": "Rhea (Saturn)",
+    "enemy": "Grineer",
+    "type": "Interception",
+    "nameRu": "Rhea (Сатурн)"
+  },
+  "SolNode177": {
+    "value": "Kappa (Sedna)",
+    "enemy": "Grineer",
+    "type": "Disruption",
+    "nameRu": "Kappa (Седна)"
+  },
+  "ClanNode18": {
+    "value": "Akkad (Eris)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Akkad (Эрида)"
+  },
+  "ClanNode2": {
+    "value": "Coba (Earth)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Coba (Земля)"
+  },
+  "SolNode25": {
+    "value": "Callisto (Jupiter)",
+    "enemy": "Corpus",
+    "type": "Interception",
+    "nameRu": "Callisto (Юпитер)"
+  },
+  "ClanNode3": {
+    "value": "Tikal (Earth)",
+    "enemy": "Infested",
+    "type": "Dark Sector Excavation",
+    "nameRu": "Tikal (Земля)"
+  },
+  "ClanNode9": {
+    "value": "Wahiba (Mars)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Wahiba (Марс)"
+  },
+  "SolNode94": {
+    "value": "Apollodorus (Mercury)",
+    "enemy": "Infested",
+    "type": "Survival",
+    "nameRu": "Apollodorus (Меркурий)"
+  },
+  "SolNode6": {
+    "value": "Despina (Neptune)",
+    "enemy": "Corpus",
+    "type": "Excavation",
+    "nameRu": "Despina (Нептун)"
+  },
+  "SolNode96": {
+    "value": "Titan (Saturn)",
+    "enemy": "Grineer",
+    "type": "Survival",
+    "nameRu": "Titan (Сатурн)"
+  },
+  "SolNode719": {
+    "value": "Munio (Deimos)",
+    "enemy": "The Murmur",
+    "type": "Mirror Defense",
+    "nameRu": "Munio (Deimos)"
+  },
+  "SolNode402": {
+    "value": "Taranis (Void)",
+    "enemy": "Orokin",
+    "type": "Defense",
+    "nameRu": "Taranis (Бездна)"
+  },
+  "SolNode147": {
+    "value": "Cinxia (Ceres)",
+    "enemy": "Grineer",
+    "type": "Interception",
+    "nameRu": "Cinxia (Церера)"
+  },
+  "SolNode185": {
+    "value": "Berehynia (Sedna)",
+    "enemy": "Grineer",
+    "type": "Interception",
+    "nameRu": "Berehynia (Седна)"
+  },
+  "SolNode164": {
+    "value": "Kala-azar (Eris)",
+    "enemy": "Infested",
+    "type": "Defense",
+    "nameRu": "Kala-azar (Эрида)"
+  },
+  "SolNode130": {
+    "value": "Lares (Mercury)",
+    "enemy": "Grineer",
+    "type": "Defense",
+    "nameRu": "Lares (Меркурий)"
+  },
+  "SettlementNode3": {
+    "value": "Stickney (Phobos)",
+    "enemy": "Corpus",
+    "type": "Survival",
+    "nameRu": "Stickney (Фобос)"
+  },
+  "SolNode81": {
+    "value": "Palus (Pluto)",
+    "enemy": "Corpus",
+    "type": "Survival",
+    "nameRu": "Palus (Плутон)"
+  },
+  "ClanNode12": {
+    "value": "Caracol (Saturn)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defection",
+    "nameRu": "Caracol (Сатурн)"
+  },
+  "SolNode100": {
+    "value": "Elara (Jupiter)",
+    "enemy": "Corpus",
+    "type": "Survival",
+    "nameRu": "Elara (Юпитер)"
+  },
+  "SolNode46": {
+    "value": "Spear (Mars)",
+    "enemy": "Grineer",
+    "type": "Defense",
+    "nameRu": "Спир (Марс)"
+  },
+  "SolNode166": {
+    "value": "Nimus (Eris)",
+    "enemy": "Infested",
+    "type": "Survival",
+    "nameRu": "Nimus (Эрида)"
+  },
+  "SolNode87": {
+    "value": "Ganymede (Jupiter)",
+    "enemy": "Corpus",
+    "type": "Disruption",
+    "nameRu": "Ganymede (Юпитер)"
+  },
+  "ClanNode6": {
+    "value": "Larzac (Europa)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Larzac (Европа)"
+  },
+  "ClanNode4": {
+    "value": "Sinai (Jupiter)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Sinai (Юпитер)"
+  },
+  "SolNode212": {
+    "value": "Paimon (Europa)",
+    "enemy": "Corpus",
+    "type": "Defense",
+    "nameRu": "Paimon (Европа)"
+  },
+  "SolNode125": {
+    "value": "Io (Jupiter)",
+    "enemy": "Corpus",
+    "type": "Defense",
+    "nameRu": "Io (Юпитер)"
+  },
+  "ClanNode7": {
+    "value": "Cholistan (Europa)",
+    "enemy": "Infested",
+    "type": "Dark Sector Excavation",
+    "nameRu": "Cholistan (Европа)"
+  },
+  "SolNode167": {
+    "value": "Oestrus (Eris)",
+    "enemy": "Infested",
+    "type": "Infested Salvage",
+    "nameRu": "Oestrus (Эрида)"
+  },
+  "SolNode30": {
+    "value": "Olympus (Mars)",
+    "enemy": "Grineer",
+    "type": "Disruption",
+    "nameRu": "Olympus (Марс)"
+  },
+  "SolNode42": {
+    "value": "Helene (Saturn)",
+    "enemy": "Grineer",
+    "type": "Defense",
+    "nameRu": "Helene (Сатурн)"
+  },
+  "SolNode22": {
+    "value": "Tessera (Venus)",
+    "enemy": "Corpus",
+    "type": "Defense",
+    "nameRu": "Tessera (Венера)"
+  },
+  "ClanNode0": {
+    "value": "Romula (Venus)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Romula (Венера)"
+  },
+  "ClanNode15": {
+    "value": "Sangeru (Sedna)",
+    "enemy": "Infested",
+    "type": "Dark Sector Defense",
+    "nameRu": "Sangeru (Седна)"
+  },
+  "SolNode232": {
+    "value": "Tuvul Commons (Zariman)",
+    "enemy": "Crossfire",
+    "type": "Void Cascade",
+    "nameRu": "Tuvul Commons (Zariman)"
+  },
+  "ClanNode23": {
+    "value": "Gabii (Ceres)",
+    "enemy": "Infested",
+    "type": "Dark Sector Survival",
+    "nameRu": "Gabii (Церера)"
+  },
+  "SolNode233": {
+    "value": "Oro Works (Zariman)",
+    "enemy": "Crossfire",
+    "type": "Void Armageddon",
+    "nameRu": "Oro Works (Zariman)"
+  },
+  "SolNode309": {
+    "value": "Yuvarium (Lua)",
+    "enemy": "Orokin",
+    "type": "Survival",
+    "nameRu": "Yuvarium (Lua)"
+  },
+  "SolNode408": {
+    "value": "Belenus (Void)",
+    "enemy": "Orokin",
+    "type": "Defense",
+    "nameRu": "Belenus (Бездна)"
+  },
+  "SolNode230": {
+    "value": "Everview Arc (Zariman)",
+    "enemy": "Crossfire",
+    "type": "Void Flood",
+    "nameRu": "Everview Arc (Zariman)"
+  }
+}
